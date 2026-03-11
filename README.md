@@ -1,6 +1,6 @@
 # TfL MCP Server
 
-A state-of-the-art [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Transport for London Unified API](https://api.tfl.gov.uk/), covering all 14 API domains and 87 endpoints.
+A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Transport for London Unified API](https://api.tfl.gov.uk/), covering all 14 API domains and 87 endpoints.
 
 ## Tools (80 total)
 
@@ -52,30 +52,25 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 {
   "mcpServers": {
     "tfl": {
-      "command": "bun",
-      "args": ["run", "/ABSOLUTE/PATH/TO/tfl-mcp/src/index.ts"],
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@daanrongen/tfl-mcp"],
       "env": {
-        "TFL_API_KEY": "your_api_key_here"
+        "TFL_API_KEY": "$TFL_API_KEY"
       }
     }
   }
 }
 ```
 
-Or using the compiled build (faster startup):
+Or add it through the CLI:
 
-```json
-{
-  "mcpServers": {
-    "tfl": {
-      "command": "bun",
-      "args": ["/ABSOLUTE/PATH/TO/tfl-mcp/build/index.js"],
-      "env": {
-        "TFL_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
+```bash
+claude mcp add tfl \
+  --type stdio \
+  --command npx \
+  --args "-y,@daanrongen/tfl-mcp" \
+  --env "TFL_API_KEY=$TFL_API_KEY"
 ```
 
 ## Development
