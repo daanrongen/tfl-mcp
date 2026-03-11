@@ -19,6 +19,20 @@ jobs:
       - run: bun lint
       - run: bun run build
       - run: chmod +x ./build/index.js
+
+      - name: Create NPM Tarball
+        run: npm pack
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            *.tgz
+            build/index.js
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
