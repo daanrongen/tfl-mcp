@@ -66,11 +66,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 Or add it through the CLI:
 
 ```bash
-claude mcp add tfl \
-  --type stdio \
-  --command npx \
-  --args "-y,@daanrongen/tfl-mcp" \
-  --env "TFL_API_KEY=$TFL_API_KEY"
+claude mcp add tfl npx -- -y @daanrongen/tfl-mcp \
+  -e TFL_API_KEY=$TFL_API_KEY
 ```
 
 ## Development
