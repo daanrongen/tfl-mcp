@@ -1,7 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import pkg from "../package.json";
 
 import { registerAccidentStatsTools } from "./accident.js";
 import { registerAirQualityTools } from "./air-quality.js";
@@ -11,6 +12,7 @@ import { registerJourneyTools } from "./journey.js";
 import { registerLineTools } from "./line.js";
 import { registerModeTools } from "./mode.js";
 import { registerOccupancyTools } from "./occupancy.js";
+
 import { registerPlaceTools } from "./place.js";
 import { registerRoadTools } from "./road.js";
 import { registerSearchTools } from "./search.js";
@@ -27,7 +29,7 @@ if (!process.env.TFL_API_KEY) {
 
 const server = new McpServer({
 	name: "tfl-mcp",
-	version: "1.0.0",
+	version: pkg.version,
 });
 
 // Register all domain modules
