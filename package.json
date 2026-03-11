@@ -1,0 +1,32 @@
+{
+  "name": "@daanrongen/tfl-mcp",
+  "version": "1.0.0",
+  "description": "A comprehensive MCP server for the Transport for London (TfL) Unified API",
+  "type": "module",
+  "bin": {
+    "tfl-mcp": "./build/index.js"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./build --target bun --sourcemap=linked",
+    "dev": "bun --watch ./src/index.ts",
+    "start": "bun ./build/index.js",
+    "start:dev": "bun ./src/index.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "lint": "biome lint ./src",
+    "format": "biome format ./src"
+  },
+  "files": [
+    "build",
+    "README.md"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.6",
+    "@types/bun": "latest",
+    "typescript": "^5.8.3"
+  }
+}
