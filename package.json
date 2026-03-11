@@ -1,6 +1,6 @@
 {
   "name": "@daanrongen/tfl-mcp",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A comprehensive MCP server for the Transport for London (TfL) Unified API",
   "type": "module",
   "bin": {
