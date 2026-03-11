@@ -4,21 +4,21 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Tra
 
 ## Tools (80 total)
 
-| Domain            | Tools                                                                  | Coverage                                                               |
-| ----------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **AccidentStats** | `tfl_accident_stats`                                                   | Road accidents by year                                                 |
-| **AirQuality**    | `tfl_air_quality`                                                      | Live pollution forecasts (NO2, O3, PM10, PM2.5, SO2)                   |
-| **BikePoint**     | `tfl_bike_points_all`, `tfl_bike_point_search`, `tfl_bike_point_by_id` | Santander Cycles availability                                          |
-| **Cabwise**       | `tfl_cabwise_search`                                                   | Licensed taxis & minicabs near a location                              |
-| **Journey**       | `tfl_journey_plan`, `tfl_journey_modes`                                | Full journey planner (all modes)                                       |
-| **Line**          | 14 tools                                                               | Status, routes, disruptions, arrivals, timetables, stop sequences      |
-| **Mode**          | `tfl_mode_active_service_types`, `tfl_mode_arrivals`                   | Cross-mode service info                                                |
-| **Occupancy**     | 5 tools                                                                | Car parks, bike docks, EV charge connectors                            |
-| **Place**         | 7 tools                                                                | Search, geo lookup, postcode streets, place types                      |
-| **Road**          | 8 tools                                                                | TLRN status, disruptions, closures, roadworks                          |
-| **Search**        | 5 tools                                                                | Full-text TfL site/data search                                         |
-| **StopPoint**     | 17 tools                                                               | Search, arrivals, disruptions, crowding, routes, taxi ranks, car parks |
-| **Vehicle**       | 3 tools                                                                | ULEZ compliance, emissions surcharge, vehicle arrival tracking         |
+| Domain            | Tools                                                      | Coverage                                                               |
+| ----------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **AccidentStats** | `accident_stats`                                           | Road accidents by year                                                 |
+| **AirQuality**    | `air_quality`                                              | Live pollution forecasts (NO2, O3, PM10, PM2.5, SO2)                   |
+| **BikePoint**     | `bike_points_all`, `bike_point_search`, `bike_point_by_id` | Santander Cycles availability                                          |
+| **Cabwise**       | `cabwise_search`                                           | Licensed taxis & minicabs near a location                              |
+| **Journey**       | `journey_plan`, `journey_modes`                            | Full journey planner (all modes)                                       |
+| **Line**          | 14 tools                                                   | Status, routes, disruptions, arrivals, timetables, stop sequences      |
+| **Mode**          | `mode_active_service_types`, `mode_arrivals`               | Cross-mode service info                                                |
+| **Occupancy**     | 5 tools                                                    | Car parks, bike docks, EV charge connectors                            |
+| **Place**         | 7 tools                                                    | Search, geo lookup, postcode streets, place types                      |
+| **Road**          | 8 tools                                                    | TLRN status, disruptions, closures, roadworks                          |
+| **Search**        | 5 tools                                                    | Full-text TfL site/data search                                         |
+| **StopPoint**     | 17 tools                                                   | Search, arrivals, disruptions, crowding, routes, taxi ranks, car parks |
+| **Vehicle**       | 3 tools                                                    | ULEZ compliance, emissions surcharge, vehicle arrival tracking         |
 
 ## Setup
 
@@ -84,17 +84,17 @@ bun test --watch   # run tests in watch mode
 
 ## Journey planner — location IDs
 
-The most common failure mode is passing a free-text name to `tfl_journey_plan`, which causes TfL to return a 300 disambiguation response. The tool handles this gracefully and returns suggested `parameterValue` IDs to use on retry.
+The most common failure mode is passing a free-text name to `journey_plan`, which causes TfL to return a 300 disambiguation response. The tool handles this gracefully and returns suggested `parameterValue` IDs to use on retry.
 
 **Preferred ID formats (most to least reliable):**
 
-| Format      | Example           | Notes                                                  |
-| ----------- | ----------------- | ------------------------------------------------------ |
-| ICS code    | `1000129`         | Most reliable — use output from `tfl_stoppoint_search` |
-| Naptan ID   | `940GZZLUVIC`     | Reliable for tube/rail stations                        |
-| Postcode    | `N1C4TB`          | Always resolves unambiguously                          |
-| Coordinates | `51.5308,-0.1238` | Always unambiguous                                     |
-| Free text   | `King's Cross`    | May trigger disambiguation                             |
+| Format      | Example           | Notes                                              |
+| ----------- | ----------------- | -------------------------------------------------- |
+| ICS code    | `1000129`         | Most reliable — use output from `stoppoint_search` |
+| Naptan ID   | `940GZZLUVIC`     | Reliable for tube/rail stations                    |
+| Postcode    | `N1C4TB`          | Always resolves unambiguously                      |
+| Coordinates | `51.5308,-0.1238` | Always unambiguous                                 |
+| Free text   | `King's Cross`    | May trigger disambiguation                         |
 
 **Common station ICS codes:**
 

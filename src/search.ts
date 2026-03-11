@@ -4,7 +4,7 @@ import { formatError, tflRequest } from "./client.js";
 
 export function registerSearchTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_search",
+		"search",
 		{
 			description:
 				"Search the TfL site and data for any query — finds stations, stops, lines, places, and other TfL content. Returns up to 100 results.",
@@ -40,7 +40,7 @@ export function registerSearchTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_search_bus_schedules",
+		"search_bus_schedules",
 		{
 			description:
 				"Searches for bus schedule documents on TfL's S3 storage for a given bus route number.",
@@ -77,7 +77,7 @@ export function registerSearchTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_search_meta_categories",
+		"search_meta_categories",
 		{
 			description:
 				"Gets the available search categories that can be used to filter TfL search results.",
@@ -106,7 +106,7 @@ export function registerSearchTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_search_meta_providers",
+		"search_meta_providers",
 		{
 			description:
 				"Gets the available search provider names used by the TfL search API.",
@@ -135,7 +135,7 @@ export function registerSearchTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_search_meta_sorts",
+		"search_meta_sorts",
 		{
 			description: "Gets the available sorting options for TfL search results.",
 			inputSchema: {},

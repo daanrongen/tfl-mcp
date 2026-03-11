@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_journey_plan tool", () => {
+describe("journey_plan tool", () => {
 	it("registers tool and formats journey options", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_journey_plan tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_journey_plan") toolHandler = handler;
+			if (name === "journey_plan") toolHandler = handler;
 		});
 
 		registerJourneyTools(server);
@@ -79,7 +79,7 @@ describe("tfl_journey_plan tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_journey_plan") toolHandler = handler;
+			if (name === "journey_plan") toolHandler = handler;
 		});
 
 		registerJourneyTools(server);

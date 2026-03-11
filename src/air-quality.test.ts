@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_air_quality tool", () => {
+describe("air_quality tool", () => {
 	it("registers tool and formats air quality data", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_air_quality tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_air_quality") toolHandler = handler;
+			if (name === "air_quality") toolHandler = handler;
 		});
 
 		registerAirQualityTools(server);

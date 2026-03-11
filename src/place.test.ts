@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_place_search tool", () => {
+describe("place_search tool", () => {
 	it("registers tool and formats place search results", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_place_search tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_place_search") toolHandler = handler;
+			if (name === "place_search") toolHandler = handler;
 		});
 
 		registerPlaceTools(server);
@@ -60,7 +60,7 @@ describe("tfl_place_search tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_place_search") toolHandler = handler;
+			if (name === "place_search") toolHandler = handler;
 		});
 
 		registerPlaceTools(server);

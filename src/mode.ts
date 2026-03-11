@@ -15,7 +15,7 @@ interface ArrivalPrediction {
 
 export function registerModeTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_mode_active_service_types",
+		"mode_active_service_types",
 		{
 			description:
 				"Returns the active service types for each transport mode (e.g. whether Night Tube is currently running). Currently focused on tube services.",
@@ -49,7 +49,7 @@ export function registerModeTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_mode_arrivals",
+		"mode_arrivals",
 		{
 			description:
 				"Gets the next arrival predictions for all stops of a given transport mode. Useful for a broad view of incoming vehicles across a whole mode.",

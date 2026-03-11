@@ -39,7 +39,7 @@ export class TflDisambiguationError extends Error {
 /** Formats disambiguation options into a human-readable suggestion list. */
 export function formatDisambiguation(result: DisambiguationResult): string {
 	const lines: string[] = [
-		"The location you entered is ambiguous. Please retry tfl_journey_plan using one of the exact `parameterValue` IDs below.",
+		"The location you entered is ambiguous. Please retry journey_plan using one of the exact `parameterValue` IDs below.",
 		"",
 	];
 

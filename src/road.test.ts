@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_road_all tool", () => {
+describe("road_all tool", () => {
 	it("registers tool and formats road results", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_road_all tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_road_all") toolHandler = handler;
+			if (name === "road_all") toolHandler = handler;
 		});
 
 		registerRoadTools(server);

@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_occupancy_car_parks_all tool", () => {
+describe("occupancy_car_parks_all tool", () => {
 	it("registers tool and formats car park data", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_occupancy_car_parks_all tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_occupancy_car_parks_all") toolHandler = handler;
+			if (name === "occupancy_car_parks_all") toolHandler = handler;
 		});
 
 		registerOccupancyTools(server);

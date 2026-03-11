@@ -4,7 +4,7 @@ import { formatError, tflRequest } from "./client.js";
 
 export function registerCabwiseTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_cabwise_search",
+		"cabwise_search",
 		{
 			description:
 				"Search for licensed taxis and minicabs near a location in London. Returns operator contact information.",

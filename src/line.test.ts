@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_line_status tool", () => {
+describe("line_status tool", () => {
 	it("registers tool and formats line status", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_line_status tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_line_status") toolHandler = handler;
+			if (name === "line_status") toolHandler = handler;
 		});
 
 		registerLineTools(server);

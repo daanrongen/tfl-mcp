@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_cabwise_search tool", () => {
+describe("cabwise_search tool", () => {
 	it("registers tool and formats JSON output for cab operators", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_cabwise_search tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_cabwise_search") toolHandler = handler;
+			if (name === "cabwise_search") toolHandler = handler;
 		});
 
 		registerCabwiseTools(server);

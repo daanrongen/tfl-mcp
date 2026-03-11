@@ -4,7 +4,7 @@ import { formatError, tflRequest } from "./client.js";
 
 export function registerAccidentStatsTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_accident_stats",
+		"accident_stats",
 		{
 			description:
 				"Gets all accident details for accidents occurring in the specified year in London.",

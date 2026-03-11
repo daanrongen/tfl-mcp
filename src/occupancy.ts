@@ -51,7 +51,7 @@ function formatCarPark(cp: CarPark): string {
 
 export function registerOccupancyTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_occupancy_car_parks_all",
+		"occupancy_car_parks_all",
 		{
 			description:
 				"Gets live occupancy (free spaces) for all TfL car parks that provide occupancy data.",
@@ -90,14 +90,14 @@ export function registerOccupancyTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_occupancy_car_park_by_id",
+		"occupancy_car_park_by_id",
 		{
 			description: "Gets live occupancy for a specific TfL car park by its ID.",
 			inputSchema: {
 				id: z
 					.string()
 					.describe(
-						"Car park ID (e.g. 'CarParks_800491'). Use tfl_occupancy_car_parks_all to find IDs.",
+						"Car park ID (e.g. 'CarParks_800491'). Use occupancy_car_parks_all to find IDs.",
 					),
 			},
 		},
@@ -121,7 +121,7 @@ export function registerOccupancyTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_occupancy_bike_points",
+		"occupancy_bike_points",
 		{
 			description:
 				"Gets live occupancy (bike and dock availability) for one or more Santander Cycles docking stations by ID.",
@@ -129,7 +129,7 @@ export function registerOccupancyTools(server: McpServer): void {
 				ids: z
 					.string()
 					.describe(
-						"Comma-separated bike point IDs (e.g. 'BikePoints_1,BikePoints_2'). Use tfl_bike_point_search to find IDs.",
+						"Comma-separated bike point IDs (e.g. 'BikePoints_1,BikePoints_2'). Use bike_point_search to find IDs.",
 					),
 			},
 		},
@@ -162,7 +162,7 @@ export function registerOccupancyTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_occupancy_charge_connectors_all",
+		"occupancy_charge_connectors_all",
 		{
 			description:
 				"Gets live availability status for all EV charge connectors managed by TfL.",
@@ -206,7 +206,7 @@ export function registerOccupancyTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_occupancy_charge_connectors_by_ids",
+		"occupancy_charge_connectors_by_ids",
 		{
 			description:
 				"Gets live availability status for specific EV charge connectors by their source system IDs.",
@@ -214,7 +214,7 @@ export function registerOccupancyTools(server: McpServer): void {
 				ids: z
 					.string()
 					.describe(
-						"Comma-separated charge connector source system IDs. Use tfl_occupancy_charge_connectors_all to find IDs.",
+						"Comma-separated charge connector source system IDs. Use occupancy_charge_connectors_all to find IDs.",
 					),
 			},
 		},

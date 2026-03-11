@@ -59,7 +59,7 @@ function formatArrival(a: ArrivalPrediction): string {
 export function registerLineTools(server: McpServer): void {
 	// --- Meta ---
 	server.registerTool(
-		"tfl_line_meta_modes",
+		"line_meta_modes",
 		{
 			description:
 				"Gets all valid line modes (e.g. tube, bus, dlr, overground, elizabeth-line, tram, cable-car).",
@@ -87,7 +87,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_meta_severity",
+		"line_meta_severity",
 		{
 			description:
 				"Gets all valid severity codes and their descriptions used in line status.",
@@ -126,7 +126,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_meta_disruption_categories",
+		"line_meta_disruption_categories",
 		{
 			description:
 				"Gets all valid disruption category names used by TfL lines.",
@@ -157,7 +157,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_meta_service_types",
+		"line_meta_service_types",
 		{
 			description:
 				"Gets all valid service types for TfL lines (e.g. Regular, Night).",
@@ -187,7 +187,7 @@ export function registerLineTools(server: McpServer): void {
 
 	// --- Line lookup ---
 	server.registerTool(
-		"tfl_line_search",
+		"line_search",
 		{
 			description:
 				"Search for TfL lines or routes by name or keyword. Returns matching lines with IDs.",
@@ -236,7 +236,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_by_ids",
+		"line_by_ids",
 		{
 			description:
 				"Gets details for one or more specific TfL lines by their IDs (e.g. 'victoria', 'central', '25').",
@@ -273,7 +273,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_by_mode",
+		"line_by_mode",
 		{
 			description:
 				"Gets all lines serving a given transport mode (e.g. all tube lines, all bus lines).",
@@ -311,7 +311,7 @@ export function registerLineTools(server: McpServer): void {
 
 	// --- Status ---
 	server.registerTool(
-		"tfl_line_status",
+		"line_status",
 		{
 			description:
 				"Gets current service status for one or more specific lines (e.g. 'Good Service', 'Minor Delays', 'Severe Delays', 'Suspended').",
@@ -353,7 +353,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_status_by_mode",
+		"line_status_by_mode",
 		{
 			description:
 				"Gets current service status for all lines of a given mode (e.g. all tube lines, all DLR lines).",
@@ -395,16 +395,16 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_status_by_severity",
+		"line_status_by_severity",
 		{
 			description:
-				"Gets all lines currently at a given severity level (e.g. all lines with severe delays). Use tfl_line_meta_severity to get severity codes.",
+				"Gets all lines currently at a given severity level (e.g. all lines with severe delays). Use line_meta_severity to get severity codes.",
 			inputSchema: {
 				severity: z
 					.number()
 					.int()
 					.describe(
-						"Severity level integer code. Use tfl_line_meta_severity to look up available codes.",
+						"Severity level integer code. Use line_meta_severity to look up available codes.",
 					),
 			},
 		},
@@ -441,7 +441,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_status_by_date_range",
+		"line_status_by_date_range",
 		{
 			description:
 				"Gets service status for specific lines over a date range (useful for checking historical disruptions or planned closures).",
@@ -490,7 +490,7 @@ export function registerLineTools(server: McpServer): void {
 
 	// --- Disruptions ---
 	server.registerTool(
-		"tfl_line_disruptions",
+		"line_disruptions",
 		{
 			description: "Gets active disruptions for specific lines.",
 			inputSchema: {
@@ -534,7 +534,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_disruptions_by_mode",
+		"line_disruptions_by_mode",
 		{
 			description:
 				"Gets all active disruptions across all lines of a given mode.",
@@ -580,7 +580,7 @@ export function registerLineTools(server: McpServer): void {
 
 	// --- Routes ---
 	server.registerTool(
-		"tfl_line_routes",
+		"line_routes",
 		{
 			description:
 				"Gets all valid routes for specific lines, including originating and terminating stop names.",
@@ -620,7 +620,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_route_sequence",
+		"line_route_sequence",
 		{
 			description:
 				"Gets the ordered sequence of stops for a specific line in a given direction. Useful for showing the full list of stations on a line.",
@@ -665,7 +665,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_routes_by_mode",
+		"line_routes_by_mode",
 		{
 			description: "Gets all routes for all lines of a given mode.",
 			inputSchema: {
@@ -701,7 +701,7 @@ export function registerLineTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_line_all_routes",
+		"line_all_routes",
 		{
 			description: "Gets all valid routes for all TfL lines.",
 			inputSchema: {
@@ -735,7 +735,7 @@ export function registerLineTools(server: McpServer): void {
 
 	// --- Stop points ---
 	server.registerTool(
-		"tfl_line_stop_points",
+		"line_stop_points",
 		{
 			description:
 				"Gets the list of stations/stops that serve a specific line.",
@@ -783,7 +783,7 @@ export function registerLineTools(server: McpServer): void {
 
 	// --- Arrivals ---
 	server.registerTool(
-		"tfl_line_arrivals",
+		"line_arrivals",
 		{
 			description:
 				"Gets live arrival predictions for one or more lines at a specific stop.",
@@ -846,7 +846,7 @@ export function registerLineTools(server: McpServer): void {
 
 	// --- Timetable ---
 	server.registerTool(
-		"tfl_line_timetable",
+		"line_timetable",
 		{
 			description:
 				"Gets the scheduled timetable for a specific station on a given line, optionally filtered to a destination.",

@@ -52,7 +52,7 @@ function formatAirQuality(data: AirQualityData): string {
 
 export function registerAirQualityTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_air_quality",
+		"air_quality",
 		{
 			description:
 				"Gets current and forecast London air quality data including pollution levels for NO2, O3, PM10, PM2.5 and SO2.",

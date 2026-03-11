@@ -41,7 +41,7 @@ function formatBikePoint(bp: BikePoint): string {
 
 export function registerBikePointTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_bike_points_all",
+		"bike_points_all",
 		{
 			description:
 				"Gets all Santander Cycles (Boris Bikes) docking station locations in London with live availability (bikes, empty docks, total docks).",
@@ -76,7 +76,7 @@ export function registerBikePointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_bike_point_search",
+		"bike_point_search",
 		{
 			description:
 				"Search for Santander Cycles docking stations by name or nearby landmark. Returns matching stations.",
@@ -125,7 +125,7 @@ export function registerBikePointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_bike_point_by_id",
+		"bike_point_by_id",
 		{
 			description:
 				"Gets a specific Santander Cycles docking station by its ID, including live bike and dock availability.",
@@ -133,7 +133,7 @@ export function registerBikePointTools(server: McpServer): void {
 				id: z
 					.string()
 					.describe(
-						"The bike point ID (e.g. 'BikePoints_1'). Use tfl_bike_point_search to find IDs.",
+						"The bike point ID (e.g. 'BikePoints_1'). Use bike_point_search to find IDs.",
 					),
 			},
 		},

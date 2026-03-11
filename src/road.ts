@@ -56,7 +56,7 @@ function formatDisruption(d: RoadDisruption): string {
 
 export function registerRoadTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_road_all",
+		"road_all",
 		{
 			description:
 				"Gets all roads managed by TfL (the TLRN — Transport for London Road Network), including their current status.",
@@ -85,7 +85,7 @@ export function registerRoadTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_road_by_ids",
+		"road_by_ids",
 		{
 			description:
 				"Gets details and current status for specific TfL managed roads by ID (e.g. A1, A2, A40).",
@@ -93,7 +93,7 @@ export function registerRoadTools(server: McpServer): void {
 				ids: z
 					.string()
 					.describe(
-						"Comma-separated road IDs (e.g. 'A1,A2' or 'A40'). Use tfl_road_all to see available road IDs.",
+						"Comma-separated road IDs (e.g. 'A1,A2' or 'A40'). Use road_all to see available road IDs.",
 					),
 			},
 		},
@@ -122,7 +122,7 @@ export function registerRoadTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_road_status",
+		"road_status",
 		{
 			description:
 				"Gets the current traffic status for specific TfL roads, optionally aggregated over a date range.",
@@ -171,7 +171,7 @@ export function registerRoadTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_road_disruptions",
+		"road_disruptions",
 		{
 			description:
 				"Gets active road disruptions (roadworks, closures, incidents) for specific roads.",
@@ -189,13 +189,13 @@ export function registerRoadTools(server: McpServer): void {
 					.string()
 					.optional()
 					.describe(
-						"Comma-separated severity filter (use tfl_road_meta_severities for valid values)",
+						"Comma-separated severity filter (use road_meta_severities for valid values)",
 					),
 				categories: z
 					.string()
 					.optional()
 					.describe(
-						"Comma-separated category filter (use tfl_road_meta_categories for valid values)",
+						"Comma-separated category filter (use road_meta_categories for valid values)",
 					),
 				closures: z
 					.boolean()
@@ -239,7 +239,7 @@ export function registerRoadTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_road_disruption_by_ids",
+		"road_disruption_by_ids",
 		{
 			description:
 				"Gets details for specific road disruptions by their disruption IDs.",
@@ -278,7 +278,7 @@ export function registerRoadTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_road_street_disruptions",
+		"road_street_disruptions",
 		{
 			description:
 				"Gets a list of disrupted streets across London. If no dates are provided, current disruptions are returned.",
@@ -319,7 +319,7 @@ export function registerRoadTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_road_meta_categories",
+		"road_meta_categories",
 		{
 			description: "Gets the list of valid road disruption category names.",
 			inputSchema: {},
@@ -347,7 +347,7 @@ export function registerRoadTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_road_meta_severities",
+		"road_meta_severities",
 		{
 			description:
 				"Gets the list of valid road disruption severity codes (e.g. 'Severe', 'Serious', 'Moderate', 'Minimal').",

@@ -68,7 +68,7 @@ describe("tflRequest", () => {
 		}
 	});
 
-	it("appends TFL_API_KEY when set", async () => {
+	it("appends API_KEY when set", async () => {
 		const fetchMock = mockFetch(200, {});
 		const original = globalThis.fetch;
 		const originalKey = process.env.TFL_API_KEY;

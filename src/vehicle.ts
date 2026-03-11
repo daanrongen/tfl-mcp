@@ -58,7 +58,7 @@ function formatCompliance(
 
 export function registerVehicleTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_vehicle_ulez_compliance",
+		"vehicle_ulez_compliance",
 		{
 			description:
 				"Checks whether a vehicle (by registration plate) is compliant with the London ULEZ (Ultra Low Emission Zone). Non-compliant vehicles face a daily charge when driving in the ULEZ.",
@@ -98,7 +98,7 @@ export function registerVehicleTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_vehicle_emission_surcharge",
+		"vehicle_emission_surcharge",
 		{
 			description:
 				"Checks whether a vehicle is subject to the London Emissions Surcharge (T-Charge / ULEZ precursor). Returns the surcharge status and any applicable charges.",
@@ -136,7 +136,7 @@ export function registerVehicleTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_vehicle_arrivals",
+		"vehicle_arrivals",
 		{
 			description:
 				"Gets live arrival predictions for one or more specific TfL vehicles by their vehicle IDs (e.g. bus fleet numbers, DLR vehicle IDs). Useful for tracking a specific vehicle.",

@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_stoppoint_search tool", () => {
+describe("stoppoint_search tool", () => {
 	it("registers tool and formats search results", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_stoppoint_search tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_stoppoint_search") toolHandler = handler;
+			if (name === "stoppoint_search") toolHandler = handler;
 		});
 
 		registerStopPointTools(server);
@@ -66,7 +66,7 @@ describe("tfl_stoppoint_search tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_stoppoint_search") toolHandler = handler;
+			if (name === "stoppoint_search") toolHandler = handler;
 		});
 
 		registerStopPointTools(server);
@@ -88,7 +88,7 @@ describe("tfl_stoppoint_search tool", () => {
 	});
 });
 
-describe("tfl_stoppoint_arrivals tool", () => {
+describe("stoppoint_arrivals tool", () => {
 	it("registers tool and formats arrivals", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -96,7 +96,7 @@ describe("tfl_stoppoint_arrivals tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_stoppoint_arrivals") toolHandler = handler;
+			if (name === "stoppoint_arrivals") toolHandler = handler;
 		});
 
 		registerStopPointTools(server);
@@ -146,7 +146,7 @@ describe("tfl_stoppoint_arrivals tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_stoppoint_arrivals") toolHandler = handler;
+			if (name === "stoppoint_arrivals") toolHandler = handler;
 		});
 
 		registerStopPointTools(server);
@@ -165,7 +165,7 @@ describe("tfl_stoppoint_arrivals tool", () => {
 	});
 });
 
-describe("tfl_stoppoint_by_geo tool", () => {
+describe("stoppoint_by_geo tool", () => {
 	it("registers tool and formats geo search results", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -173,7 +173,7 @@ describe("tfl_stoppoint_by_geo tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_stoppoint_by_geo") toolHandler = handler;
+			if (name === "stoppoint_by_geo") toolHandler = handler;
 		});
 
 		registerStopPointTools(server);

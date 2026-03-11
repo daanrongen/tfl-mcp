@@ -51,7 +51,7 @@ function formatArrival(a: ArrivalPrediction): string {
 export function registerStopPointTools(server: McpServer): void {
 	// --- Meta ---
 	server.registerTool(
-		"tfl_stoppoint_meta_modes",
+		"stoppoint_meta_modes",
 		{
 			description:
 				"Gets the list of all transport modes available at TfL stop points.",
@@ -85,7 +85,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_meta_stop_types",
+		"stoppoint_meta_stop_types",
 		{
 			description:
 				"Gets all valid stop point types (e.g. NaptanMetroStation, NaptanPublicBusCoachTram, NaptanRailStation).",
@@ -114,7 +114,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_meta_categories",
+		"stoppoint_meta_categories",
 		{
 			description:
 				"Gets the list of available additional information categories for stop points.",
@@ -144,11 +144,11 @@ export function registerStopPointTools(server: McpServer): void {
 
 	// --- Lookup ---
 	server.registerTool(
-		"tfl_stoppoint_search",
+		"stoppoint_search",
 		{
 			description:
 				"Search for TfL stop points (stations, bus stops) by name or 5-digit bus stop SMS code.\n\n" +
-				"The returned 'ID' field is the ICS code — use this as the from/to value in tfl_journey_plan for unambiguous results.",
+				"The returned 'ID' field is the ICS code — use this as the from/to value in journey_plan for unambiguous results.",
 			inputSchema: {
 				query: z
 					.string()
@@ -217,7 +217,7 @@ export function registerStopPointTools(server: McpServer): void {
 						],
 					};
 				}
-				const header = `Stop points matching "${query}" (${matches.length} of ${data.total ?? "?"}):\n(Use the 'ID' value in tfl_journey_plan for unambiguous routing)\n`;
+				const header = `Stop points matching "${query}" (${matches.length} of ${data.total ?? "?"}):\n(Use the 'ID' value in journey_plan for unambiguous routing)\n`;
 				return {
 					content: [
 						{
@@ -238,7 +238,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_by_ids",
+		"stoppoint_by_ids",
 		{
 			description:
 				"Gets full details for one or more stop points by their Naptan IDs.",
@@ -246,7 +246,7 @@ export function registerStopPointTools(server: McpServer): void {
 				ids: z
 					.string()
 					.describe(
-						"Comma-separated Naptan stop IDs (e.g. '940GZZLUVIC' for Victoria tube, '490000173RG' for a bus stop). Use tfl_stoppoint_search to find IDs.",
+						"Comma-separated Naptan stop IDs (e.g. '940GZZLUVIC' for Victoria tube, '490000173RG' for a bus stop). Use stoppoint_search to find IDs.",
 					),
 				includeCrowdingData: z
 					.boolean()
@@ -280,7 +280,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_by_sms",
+		"stoppoint_by_sms",
 		{
 			description:
 				"Gets a stop point by its 5-digit SMS bus stop code (used for TfL's SMS arrival checker service).",
@@ -316,7 +316,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_by_geo",
+		"stoppoint_by_geo",
 		{
 			description:
 				"Gets stop points within a radius of given coordinates, filtered by stop type. Essential for finding nearby stations or bus stops.",
@@ -326,7 +326,7 @@ export function registerStopPointTools(server: McpServer): void {
 				stopTypes: z
 					.string()
 					.describe(
-						"Comma-separated stop type(s) (e.g. 'NaptanMetroStation,NaptanPublicBusCoachTram'). Use tfl_stoppoint_meta_stop_types for available types.",
+						"Comma-separated stop type(s) (e.g. 'NaptanMetroStation,NaptanPublicBusCoachTram'). Use stoppoint_meta_stop_types for available types.",
 					),
 				radius: z
 					.number()
@@ -403,7 +403,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_by_mode",
+		"stoppoint_by_mode",
 		{
 			description:
 				"Gets all stop points filtered by transport mode (e.g. all tube stations, all DLR stops). Supports pagination.",
@@ -445,7 +445,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_by_type",
+		"stoppoint_by_type",
 		{
 			description:
 				"Gets all stop points of a specific type, with optional pagination.",
@@ -453,7 +453,7 @@ export function registerStopPointTools(server: McpServer): void {
 				types: z
 					.string()
 					.describe(
-						"Comma-separated stop types (e.g. 'NaptanMetroStation'). Use tfl_stoppoint_meta_stop_types to list valid types.",
+						"Comma-separated stop types (e.g. 'NaptanMetroStation'). Use stoppoint_meta_stop_types to list valid types.",
 					),
 				page: z
 					.number()
@@ -488,7 +488,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_service_types",
+		"stoppoint_service_types",
 		{
 			description:
 				"Gets the service types (Regular, Night) available at a specific stop point, optionally filtered by lines and modes.",
@@ -532,7 +532,7 @@ export function registerStopPointTools(server: McpServer): void {
 
 	// --- Arrivals ---
 	server.registerTool(
-		"tfl_stoppoint_arrivals",
+		"stoppoint_arrivals",
 		{
 			description:
 				"Gets live arrival predictions for all lines at a given stop point. The most useful real-time departure board tool.",
@@ -540,7 +540,7 @@ export function registerStopPointTools(server: McpServer): void {
 				id: z
 					.string()
 					.describe(
-						"Stop point Naptan ID (e.g. '940GZZLUVIC' for Victoria tube, '490000173RG' for a bus stop). Use tfl_stoppoint_search to find IDs.",
+						"Stop point Naptan ID (e.g. '940GZZLUVIC' for Victoria tube, '490000173RG' for a bus stop). Use stoppoint_search to find IDs.",
 					),
 			},
 		},
@@ -582,7 +582,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_arrival_departures",
+		"stoppoint_arrival_departures",
 		{
 			description:
 				"Gets live arrival AND departure predictions for a stop point (Overground and Elizabeth line only), optionally filtered by line.",
@@ -633,7 +633,7 @@ export function registerStopPointTools(server: McpServer): void {
 
 	// --- Disruptions ---
 	server.registerTool(
-		"tfl_stoppoint_disruptions",
+		"stoppoint_disruptions",
 		{
 			description: "Gets all active disruptions at one or more stop points.",
 			inputSchema: {
@@ -678,7 +678,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_disruptions_by_mode",
+		"stoppoint_disruptions_by_mode",
 		{
 			description: "Gets all disrupted stop points for a given transport mode.",
 			inputSchema: {
@@ -726,7 +726,7 @@ export function registerStopPointTools(server: McpServer): void {
 
 	// --- Journey / routing helpers ---
 	server.registerTool(
-		"tfl_stoppoint_reachable_from",
+		"stoppoint_reachable_from",
 		{
 			description:
 				"Gets all stop points that are reachable from a given station on a specific line — useful for showing where you can go without changing.",
@@ -767,7 +767,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_direction",
+		"stoppoint_direction",
 		{
 			description:
 				"Returns the canonical direction ('inbound' or 'outbound') between two stop points on a line. Useful for journey planning.",
@@ -806,7 +806,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_route",
+		"stoppoint_route",
 		{
 			description:
 				"Returns the route sections for all lines that serve a given stop point.",
@@ -845,7 +845,7 @@ export function registerStopPointTools(server: McpServer): void {
 
 	// --- Crowding ---
 	server.registerTool(
-		"tfl_stoppoint_crowding",
+		"stoppoint_crowding",
 		{
 			description:
 				"Gets crowding data for a stop point on a specific line, optionally by direction. Shows how busy trains typically are.",
@@ -884,7 +884,7 @@ export function registerStopPointTools(server: McpServer): void {
 
 	// --- Associated places ---
 	server.registerTool(
-		"tfl_stoppoint_car_parks",
+		"stoppoint_car_parks",
 		{
 			description:
 				"Gets car parks associated with a given stop point (station).",
@@ -917,7 +917,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_taxi_ranks",
+		"stoppoint_taxi_ranks",
 		{
 			description: "Gets taxi ranks near a given stop point (station).",
 			inputSchema: {
@@ -949,7 +949,7 @@ export function registerStopPointTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_stoppoint_place_types",
+		"stoppoint_place_types",
 		{
 			description:
 				"Gets places of given types that are associated with (near) a specific stop point.",

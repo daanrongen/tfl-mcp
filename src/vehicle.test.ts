@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_vehicle_ulez_compliance tool", () => {
+describe("vehicle_ulez_compliance tool", () => {
 	it("registers tool and formats compliance data", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_vehicle_ulez_compliance tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_vehicle_ulez_compliance") toolHandler = handler;
+			if (name === "vehicle_ulez_compliance") toolHandler = handler;
 		});
 
 		registerVehicleTools(server);

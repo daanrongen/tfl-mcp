@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_accident_stats tool", () => {
+describe("accident_stats tool", () => {
 	it("registers the tool and returns formatted accident stats", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_accident_stats tool", () => {
 
 		// @ts-expect-error -> mock injection
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_accident_stats") {
+			if (name === "accident_stats") {
 				toolHandler = handler;
 			}
 		});
@@ -53,7 +53,7 @@ describe("tfl_accident_stats tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_accident_stats") toolHandler = handler;
+			if (name === "accident_stats") toolHandler = handler;
 		});
 
 		registerAccidentStatsTools(server);

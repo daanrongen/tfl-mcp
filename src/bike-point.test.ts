@@ -13,7 +13,7 @@ function mockFetch(status: number, body: unknown) {
 	);
 }
 
-describe("tfl_bike_point tool", () => {
+describe("bike_point tool", () => {
 	it("registers tool and formats bike point search results", async () => {
 		const server = new McpServer({ name: "TestServer", version: "1.0.0" });
 		// biome-ignore lint/suspicious/noExplicitAny: mock
@@ -21,7 +21,7 @@ describe("tfl_bike_point tool", () => {
 
 		// @ts-expect-error
 		server.registerTool = mock((name, _schema, handler) => {
-			if (name === "tfl_bike_point_search") toolHandler = handler;
+			if (name === "bike_point_search") toolHandler = handler;
 		});
 
 		registerBikePointTools(server);

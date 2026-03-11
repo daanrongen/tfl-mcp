@@ -46,7 +46,7 @@ function formatJourney(j: Journey, index: number): string {
 
 export function registerJourneyTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_journey_plan",
+		"journey_plan",
 		{
 			description:
 				"Plan a journey across London's transport network. Supports tube, bus, overground, Elizabeth line, DLR, cycling and walking. Returns journey options with duration, modes, and step-by-step legs.",
@@ -200,7 +200,7 @@ export function registerJourneyTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_journey_modes",
+		"journey_modes",
 		{
 			description:
 				"Gets all available transport modes supported by the TfL journey planner (e.g. tube, bus, dlr, overground, elizabeth-line, cycling, walking).",

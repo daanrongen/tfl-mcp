@@ -17,7 +17,7 @@ function formatPlace(p: Place): string {
 
 export function registerPlaceTools(server: McpServer): void {
 	server.registerTool(
-		"tfl_place_search",
+		"place_search",
 		{
 			description:
 				"Search for TfL places (stations, stops, landmarks) by name.",
@@ -32,7 +32,7 @@ export function registerPlaceTools(server: McpServer): void {
 					.string()
 					.optional()
 					.describe(
-						"Comma-separated place types to filter by. Use tfl_place_meta_types to get available types.",
+						"Comma-separated place types to filter by. Use place_meta_types to get available types.",
 					),
 			},
 		},
@@ -72,7 +72,7 @@ export function registerPlaceTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_place_by_id",
+		"place_by_id",
 		{
 			description:
 				"Gets a TfL place by its ID, including all additional properties.",
@@ -113,7 +113,7 @@ export function registerPlaceTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_place_by_geo",
+		"place_by_geo",
 		{
 			description:
 				"Gets TfL places within a geographic area. Supports radius search (lat/lon + radius) or bounding box search.",
@@ -223,7 +223,7 @@ export function registerPlaceTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_place_by_type",
+		"place_by_type",
 		{
 			description:
 				"Gets all TfL places of a specific type (e.g. all tube stations, all bus stops).",
@@ -231,7 +231,7 @@ export function registerPlaceTools(server: McpServer): void {
 				types: z
 					.string()
 					.describe(
-						"Comma-separated place types. Use tfl_place_meta_types to get available types.",
+						"Comma-separated place types. Use place_meta_types to get available types.",
 					),
 				activeOnly: z
 					.boolean()
@@ -265,7 +265,7 @@ export function registerPlaceTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_place_at_coordinates",
+		"place_at_coordinates",
 		{
 			description:
 				"Gets any polygonal places (e.g. borough boundaries) of a given type whose geography intersects given coordinates.",
@@ -302,7 +302,7 @@ export function registerPlaceTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_place_streets_by_postcode",
+		"place_streets_by_postcode",
 		{
 			description: "Gets the set of streets associated with a London postcode.",
 			inputSchema: {
@@ -336,7 +336,7 @@ export function registerPlaceTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_place_meta_types",
+		"place_meta_types",
 		{
 			description:
 				"Gets the list of all available TfL place types (e.g. NaptanMetroStation, NaptanBusCoachStation, BikePoint).",
@@ -368,7 +368,7 @@ export function registerPlaceTools(server: McpServer): void {
 	);
 
 	server.registerTool(
-		"tfl_place_meta_categories",
+		"place_meta_categories",
 		{
 			description:
 				"Gets all available place property categories and keys (useful for filtering place searches).",
