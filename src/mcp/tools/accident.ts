@@ -20,7 +20,7 @@ export const registerAccidentTools = (
         .number()
         .int()
         .min(2005)
-        .max(new Date().getFullYear())
+        .max(new Date().getFullYear() - 1)
         .describe(
           "The year for which to retrieve accident statistics (e.g. 2023)",
         ),
