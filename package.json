@@ -11,6 +11,7 @@
   "scripts": {
     "start": "bun run src/main.ts",
     "dev": "bun --watch src/main.ts",
+    "inspect": "DANGEROUSLY_OMIT_AUTH=true mcp-inspector bun dist/main.js",
     "build": "bun build src/main.ts --outfile dist/main.js --target bun",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "bun test",

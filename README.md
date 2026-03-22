@@ -1,6 +1,12 @@
-# TfL MCP Server
+# tfl-mcp
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Transport for London Unified API](https://api.tfl.gov.uk/), covering all 14 API domains and 87 endpoints.
+MCP server for the [Transport for London Unified API](https://api.tfl.gov.uk/) — lines, journeys, stop points, arrivals, bike points, occupancy, road disruptions and more over stdio.
+
+## Installation
+
+```bash
+npx -y @daanrongen/tfl-mcp
+```
 
 ## Tools (80 total)
 
@@ -22,31 +28,13 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Tra
 
 ## Setup
 
-### 1. Install Bun
+### API key (optional but recommended)
 
-```bash
-curl -fsSL https://bun.sh/install | bash
-```
+Register for a free key at [https://api-portal.tfl.gov.uk/](https://api-portal.tfl.gov.uk/). Without one, requests are rate-limited to ~500/day.
 
-### 2. Install dependencies
+### Claude Desktop
 
-```bash
-bun install
-```
-
-### 3. Build
-
-```bash
-bun run build
-```
-
-### 4. Get a TfL API key (free)
-
-Register at [https://api-portal.tfl.gov.uk/](https://api-portal.tfl.gov.uk/). Without a key, requests are rate-limited to ~500/day.
-
-### 5. Configure Claude Desktop
-
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -56,32 +44,42 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
       "command": "npx",
       "args": ["-y", "@daanrongen/tfl-mcp"],
       "env": {
-        "TFL_API_KEY": "$TFL_API_KEY"
+        "TFL_API_KEY": "your-key-here"
       }
     }
   }
 }
 ```
 
-Or add it through the CLI:
+Or via the CLI:
 
 ```bash
-claude mcp add tfl npx -- -y @daanrongen/tfl-mcp \
-  -e TFL_API_KEY=$TFL_API_KEY
+claude mcp add tfl npx -- -y @daanrongen/tfl-mcp -e TFL_API_KEY=your-key-here
 ```
 
 ## Development
 
 ```bash
-bun run dev        # run with --watch (hot reload)
-bun run start:dev  # run src/index.ts directly
+bun install
+bun run dev        # run with --watch
 bun test           # run test suite
-bun test --watch   # run tests in watch mode
+bun run build      # bundle to dist/main.js
+bun run inspect    # open MCP Inspector in browser
 ```
+
+## Inspecting locally
+
+`bun run inspect` launches the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) against the local build:
+
+```bash
+bun run build && bun run inspect
+```
+
+This opens the Inspector UI in your browser where you can call any tool interactively and inspect request/response shapes.
 
 ## Journey planner — location IDs
 
-The most common failure mode is passing a free-text name to `journey_plan`, which causes TfL to return a 300 disambiguation response. The tool handles this gracefully and returns suggested `parameterValue` IDs to use on retry.
+The most common failure mode is passing a free-text name to `journey_plan`, which causes TfL to return a 300 disambiguation response. The tool handles this gracefully and returns suggested `parameterValue` IDs to retry with.
 
 **Preferred ID formats (most to least reliable):**
 
@@ -112,19 +110,16 @@ The most common failure mode is passing a free-text name to `journey_plan`, whic
 
 ```
 src/
-├── index.ts          # Entry point — wires all modules into one MCP server
-├── client.ts         # Shared HTTP client — API key injection, 300 disambiguation handling
-├── accident.ts       # AccidentStats domain
-├── air-quality.ts    # AirQuality domain
-├── bike-point.ts     # BikePoint domain
-├── cabwise.ts        # Cabwise domain
-├── journey.ts        # Journey domain — disambiguation-aware
-├── line.ts           # Line domain (14 tools)
-├── mode.ts           # Mode domain
-├── occupancy.ts      # Occupancy domain
-├── place.ts          # Place domain
-├── road.ts           # Road domain
-├── search.ts         # Search domain
-├── stop-point.ts     # StopPoint domain (17 tools)
-└── vehicle.ts        # Vehicle domain
+├── config.ts           # Effect Config — TFL_API_KEY
+├── main.ts             # Entry point — ManagedRuntime + StdioServerTransport
+├── domain/
+│   ├── TflClient.ts    # Context.Tag service interface
+│   └── errors.ts       # TflError, TflDisambiguationError
+├── infra/
+│   ├── TflClientLive.ts  # Layer.effect — HTTP client with disambiguation handling
+│   └── TflClientTest.ts  # In-memory test adapter
+└── mcp/
+    ├── server.ts       # McpServer wired to ManagedRuntime
+    ├── utils.ts        # formatSuccess, formatError, formatDisambiguation
+    └── tools/          # One module per TfL domain (13 files)
 ```
