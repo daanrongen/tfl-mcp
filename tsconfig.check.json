@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "Bundler",
+    "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "types": ["bun-types"]
+    "types": ["bun-types"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "include": ["src/**/*", "tests/**/*"]
 }
