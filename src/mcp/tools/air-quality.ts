@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type AirQualityForecast = {
@@ -26,16 +26,14 @@ type AirQualityData = {
 const formatAirQuality = (data: AirQualityData): string => {
   const lines: string[] = [];
   if (data.updatePeriod) lines.push(`Update Period: ${data.updatePeriod}`);
-  if (data.updateFrequency)
-    lines.push(`Update Frequency: ${data.updateFrequency}`);
+  if (data.updateFrequency) lines.push(`Update Frequency: ${data.updateFrequency}`);
   if (data.disclaimerText) lines.push(`\nDisclaimer: ${data.disclaimerText}`);
   if (data.currentForecast?.length) {
     lines.push("\n--- Current Air Quality Forecasts ---");
     for (const forecast of data.currentForecast) {
       lines.push(`\nForecast Type: ${forecast.forecastType ?? "Unknown"}`);
       lines.push(`Band: ${forecast.forecastBand ?? "Unknown"}`);
-      if (forecast.forecastSummary)
-        lines.push(`Summary: ${forecast.forecastSummary}`);
+      if (forecast.forecastSummary) lines.push(`Summary: ${forecast.forecastSummary}`);
       if (forecast.nO2Band) lines.push(`NO2: ${forecast.nO2Band}`);
       if (forecast.o3Band) lines.push(`O3: ${forecast.o3Band}`);
       if (forecast.pM10Band) lines.push(`PM10: ${forecast.pM10Band}`);
@@ -52,10 +50,7 @@ const formatAirQuality = (data: AirQualityData): string => {
 
 export const registerAirQualityTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "air_quality",

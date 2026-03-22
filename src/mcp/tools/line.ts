@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type LineStatus = { statusSeverityDescription?: string; reason?: string };
@@ -27,10 +27,7 @@ type ArrivalPrediction = {
 const formatLine = (line: Line): string => {
   const statuses =
     line.lineStatuses
-      ?.map(
-        (s) =>
-          `${s.statusSeverityDescription ?? "?"}${s.reason ? `: ${s.reason}` : ""}`,
-      )
+      ?.map((s) => `${s.statusSeverityDescription ?? "?"}${s.reason ? `: ${s.reason}` : ""}`)
       .join("; ") ?? "No status";
   return `${line.name ?? line.id ?? "Unknown"} (${line.modeName ?? "?"}) — ${statuses}`;
 };
@@ -43,17 +40,13 @@ const formatDisruption = (d: Disruption): string =>
   ].join("\n");
 
 const formatArrival = (a: ArrivalPrediction): string => {
-  const mins =
-    a.timeToStation != null ? Math.round(a.timeToStation / 60) : null;
+  const mins = a.timeToStation != null ? Math.round(a.timeToStation / 60) : null;
   return `  → ${a.destinationName ?? "?"} via ${a.platformName ?? "?"} — ${mins != null ? `${mins} min` : (a.expectedArrival ?? "?")}`;
 };
 
 export const registerLineTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   // --- Meta ---
   server.tool(
@@ -71,10 +64,7 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data =
-            yield* client.request<Array<{ modeName?: string }>>(
-              "/Line/Meta/Modes",
-            );
+          const data = yield* client.request<Array<{ modeName?: string }>>("/Line/Meta/Modes");
           return `Available line modes: ${data.map((m) => m.modeName ?? "??").join(", ")}`;
         }),
       );
@@ -98,13 +88,14 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{
-              modeName?: string;
-              severityLevel?: number;
-              description?: string;
-            }>
-          >("/Line/Meta/Severity");
+          const data =
+            yield* client.request<
+              Array<{
+                modeName?: string;
+                severityLevel?: number;
+                description?: string;
+              }>
+            >("/Line/Meta/Severity");
           const rows = data.map(
             (s) =>
               `Level ${s.severityLevel ?? "?"} (${s.modeName ?? "?"}): ${s.description ?? "?"}`,
@@ -132,9 +123,7 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<string[]>(
-            "/Line/Meta/DisruptionCategories",
-          );
+          const data = yield* client.request<string[]>("/Line/Meta/DisruptionCategories");
           return `Disruption categories:\n${data.join("\n")}`;
         }),
       );
@@ -158,9 +147,7 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<string[]>(
-            "/Line/Meta/ServiceTypes",
-          );
+          const data = yield* client.request<string[]>("/Line/Meta/ServiceTypes");
           return `Service types: ${data.join(", ")}`;
         }),
       );
@@ -177,9 +164,7 @@ export const registerLineTools = (
       query: z
         .string()
         .min(1)
-        .describe(
-          "Search term (e.g. 'Victoria', 'Northern', '25', 'Waterloo')",
-        ),
+        .describe("Search term (e.g. 'Victoria', 'Northern', '25', 'Waterloo')"),
       modes: z
         .string()
         .optional()
@@ -200,10 +185,10 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/Line/Search/${encodeURIComponent(query)}`,
-            { modes, serviceTypes },
-          );
+          const data = yield* client.request<unknown>(`/Line/Search/${encodeURIComponent(query)}`, {
+            modes,
+            serviceTypes,
+          });
           return `Line search results for "${query}":\n\n${JSON.stringify(data, null, 2)}`;
         }),
       );
@@ -218,9 +203,7 @@ export const registerLineTools = (
     {
       ids: z
         .string()
-        .describe(
-          "Comma-separated line IDs (e.g. 'victoria,central,jubilee' or '25,73')",
-        ),
+        .describe("Comma-separated line IDs (e.g. 'victoria,central,jubilee' or '25,73')"),
     },
     {
       title: "Lines by IDs",
@@ -233,9 +216,7 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(
-            `/Line/${encodeURIComponent(ids)}`,
-          );
+          const data = yield* client.request<Line[]>(`/Line/${encodeURIComponent(ids)}`);
           return data.map(formatLine).join("\n");
         }),
       );
@@ -265,9 +246,7 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(
-            `/Line/Mode/${encodeURIComponent(modes)}`,
-          );
+          const data = yield* client.request<Line[]>(`/Line/Mode/${encodeURIComponent(modes)}`);
           return `Lines for mode(s) "${modes}" (${data.length} total):\n\n${data.map(formatLine).join("\n")}`;
         }),
       );
@@ -283,13 +262,8 @@ export const registerLineTools = (
     {
       ids: z
         .string()
-        .describe(
-          "Comma-separated line IDs to check (e.g. 'victoria,jubilee,central')",
-        ),
-      detail: z
-        .boolean()
-        .optional()
-        .describe("If true, include detailed disruption information"),
+        .describe("Comma-separated line IDs to check (e.g. 'victoria,jubilee,central')"),
+      detail: z.boolean().optional().describe("If true, include detailed disruption information"),
     },
     {
       title: "Line Status",
@@ -302,10 +276,9 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(
-            `/Line/${encodeURIComponent(ids)}/Status`,
-            { detail },
-          );
+          const data = yield* client.request<Line[]>(`/Line/${encodeURIComponent(ids)}/Status`, {
+            detail,
+          });
           return `Current line status:\n\n${data.map(formatLine).join("\n")}`;
         }),
       );
@@ -320,13 +293,8 @@ export const registerLineTools = (
     {
       modes: z
         .string()
-        .describe(
-          "Comma-separated modes (e.g. 'tube', 'dlr', 'overground', 'elizabeth-line')",
-        ),
-      detail: z
-        .boolean()
-        .optional()
-        .describe("If true, include detailed disruption reasons"),
+        .describe("Comma-separated modes (e.g. 'tube', 'dlr', 'overground', 'elizabeth-line')"),
+      detail: z.boolean().optional().describe("If true, include detailed disruption reasons"),
     },
     {
       title: "Line Status by Mode",
@@ -373,9 +341,7 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(
-            `/Line/Status/${severity}`,
-          );
+          const data = yield* client.request<Line[]>(`/Line/Status/${severity}`);
           if (!data.length) return `No lines at severity level ${severity}.`;
           return `Lines at severity ${severity}:\n\n${data.map(formatLine).join("\n")}`;
         }),
@@ -389,19 +355,10 @@ export const registerLineTools = (
     "line_status_by_date_range",
     "Gets service status for specific lines over a date range (useful for checking historical disruptions or planned closures).",
     {
-      ids: z
-        .string()
-        .describe("Comma-separated line IDs (e.g. 'victoria,jubilee')"),
-      startDate: z
-        .string()
-        .describe("Start date in ISO 8601 format (e.g. '2024-03-01T00:00:00')"),
-      endDate: z
-        .string()
-        .describe("End date in ISO 8601 format (e.g. '2024-03-07T23:59:59')"),
-      detail: z
-        .boolean()
-        .optional()
-        .describe("Include detailed disruption info"),
+      ids: z.string().describe("Comma-separated line IDs (e.g. 'victoria,jubilee')"),
+      startDate: z.string().describe("Start date in ISO 8601 format (e.g. '2024-03-01T00:00:00')"),
+      endDate: z.string().describe("End date in ISO 8601 format (e.g. '2024-03-07T23:59:59')"),
+      detail: z.boolean().optional().describe("Include detailed disruption info"),
     },
     {
       title: "Line Status by Date Range",
@@ -431,9 +388,7 @@ export const registerLineTools = (
     "line_disruptions",
     "Gets active disruptions for specific lines.",
     {
-      ids: z
-        .string()
-        .describe("Comma-separated line IDs (e.g. 'central,district')"),
+      ids: z.string().describe("Comma-separated line IDs (e.g. 'central,district')"),
     },
     {
       title: "Line Disruptions",
@@ -462,9 +417,7 @@ export const registerLineTools = (
     "line_disruptions_by_mode",
     "Gets all active disruptions across all lines of a given mode.",
     {
-      modes: z
-        .string()
-        .describe("Comma-separated modes (e.g. 'tube', 'bus', 'overground')"),
+      modes: z.string().describe("Comma-separated modes (e.g. 'tube', 'bus', 'overground')"),
     },
     {
       title: "Line Disruptions by Mode",
@@ -480,8 +433,7 @@ export const registerLineTools = (
           const data = yield* client.request<Disruption[]>(
             `/Line/Mode/${encodeURIComponent(modes)}/Disruption`,
           );
-          if (!data.length)
-            return `No active disruptions for mode(s): ${modes}`;
+          if (!data.length) return `No active disruptions for mode(s): ${modes}`;
           return `Disruptions for ${modes}:\n\n${data.map(formatDisruption).join("\n---\n")}`;
         }),
       );
@@ -495,9 +447,7 @@ export const registerLineTools = (
     "line_routes",
     "Gets all valid routes for specific lines, including originating and terminating stop names.",
     {
-      ids: z
-        .string()
-        .describe("Comma-separated line IDs (e.g. 'victoria,elizabeth')"),
+      ids: z.string().describe("Comma-separated line IDs (e.g. 'victoria,elizabeth')"),
       serviceTypes: z
         .string()
         .optional()
@@ -514,10 +464,9 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/Line/${encodeURIComponent(ids)}/Route`,
-            { serviceTypes },
-          );
+          const data = yield* client.request<unknown>(`/Line/${encodeURIComponent(ids)}/Route`, {
+            serviceTypes,
+          });
           return `Routes for ${ids}:\n\n${JSON.stringify(data, null, 2)}`;
         }),
       );
@@ -531,13 +480,8 @@ export const registerLineTools = (
     "Gets the ordered sequence of stops for a specific line in a given direction.",
     {
       id: z.string().describe("Line ID (e.g. 'victoria', 'jubilee', '25')"),
-      direction: z
-        .enum(["inbound", "outbound", "all"])
-        .describe("Direction of travel"),
-      serviceTypes: z
-        .string()
-        .optional()
-        .describe("Filter by service type (e.g. 'Regular')"),
+      direction: z.enum(["inbound", "outbound", "all"]).describe("Direction of travel"),
+      serviceTypes: z.string().optional().describe("Filter by service type (e.g. 'Regular')"),
       excludeCrowding: z
         .boolean()
         .optional()
@@ -570,9 +514,7 @@ export const registerLineTools = (
     "line_routes_by_mode",
     "Gets all routes for all lines of a given mode.",
     {
-      modes: z
-        .string()
-        .describe("Comma-separated modes (e.g. 'tube,overground')"),
+      modes: z.string().describe("Comma-separated modes (e.g. 'tube,overground')"),
       serviceTypes: z.string().optional().describe("Filter by service type"),
     },
     {
@@ -651,14 +593,13 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{ id?: string; commonName?: string }>
-          >(`/Line/${encodeURIComponent(id)}/StopPoints`, {
-            tflOperatedNationalRailStationsOnly,
-          });
-          const stops = data.map(
-            (s) => `${s.commonName ?? "??"} (${s.id ?? "?"})`,
+          const data = yield* client.request<Array<{ id?: string; commonName?: string }>>(
+            `/Line/${encodeURIComponent(id)}/StopPoints`,
+            {
+              tflOperatedNationalRailStationsOnly,
+            },
           );
+          const stops = data.map((s) => `${s.commonName ?? "??"} (${s.id ?? "?"})`);
           return `Stops on ${id} (${data.length} total):\n\n${stops.join("\n")}`;
         }),
       );
@@ -672,22 +613,14 @@ export const registerLineTools = (
     "line_arrivals",
     "Gets live arrival predictions for one or more lines at a specific stop.",
     {
-      ids: z
-        .string()
-        .describe("Comma-separated line IDs (e.g. 'victoria,jubilee')"),
+      ids: z.string().describe("Comma-separated line IDs (e.g. 'victoria,jubilee')"),
       stopPointId: z
         .string()
         .describe(
           "Stop point ID where you want arrival predictions (e.g. '940GZZLUVIC' for Victoria station)",
         ),
-      direction: z
-        .enum(["inbound", "outbound", "all"])
-        .optional()
-        .describe("Filter by direction"),
-      destinationStationId: z
-        .string()
-        .optional()
-        .describe("Filter by destination station ID"),
+      direction: z.enum(["inbound", "outbound", "all"]).optional().describe("Filter by direction"),
+      destinationStationId: z.string().optional().describe("Filter by destination station ID"),
     },
     {
       title: "Line Arrivals",
@@ -704,11 +637,8 @@ export const registerLineTools = (
             `/Line/${encodeURIComponent(ids)}/Arrivals/${encodeURIComponent(stopPointId)}`,
             { direction, destinationStationId },
           );
-          if (!data.length)
-            return `No arrivals found for lines ${ids} at stop ${stopPointId}.`;
-          const sorted = [...data].sort(
-            (a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0),
-          );
+          if (!data.length) return `No arrivals found for lines ${ids} at stop ${stopPointId}.`;
+          const sorted = [...data].sort((a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0));
           return `Arrivals for ${ids} at stop ${stopPointId}:\n${sorted.map(formatArrival).join("\n")}`;
         }),
       );
@@ -723,9 +653,7 @@ export const registerLineTools = (
     "Gets the scheduled timetable for a specific station on a given line, optionally filtered to a destination.",
     {
       id: z.string().describe("Line ID (e.g. 'victoria', 'central')"),
-      fromStopPointId: z
-        .string()
-        .describe("Origin stop point ID (e.g. '940GZZLUVIC')"),
+      fromStopPointId: z.string().describe("Origin stop point ID (e.g. '940GZZLUVIC')"),
       toStopPointId: z
         .string()
         .optional()

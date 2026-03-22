@@ -7,6 +7,8 @@
     "exactOptionalPropertyTypes": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "types": ["bun-types"]
   },
   "include": ["src/**/*", "tests/**/*"]

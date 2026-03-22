@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type ArrivalPrediction = {
@@ -15,10 +15,7 @@ type ArrivalPrediction = {
 
 export const registerModeTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "mode_active_service_types",
@@ -35,12 +32,10 @@ export const registerModeTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{ mode?: string; serviceType?: string }>
-          >("/Mode/ActiveServiceTypes");
-          const rows = data.map(
-            (s) => `${s.mode ?? "?"}: ${s.serviceType ?? "?"}`,
+          const data = yield* client.request<Array<{ mode?: string; serviceType?: string }>>(
+            "/Mode/ActiveServiceTypes",
           );
+          const rows = data.map((s) => `${s.mode ?? "?"}: ${s.serviceType ?? "?"}`);
           return `Active service types:\n\n${rows.join("\n")}`;
         }),
       );
@@ -83,9 +78,7 @@ export const registerModeTools = (
             { count },
           );
           if (!data.length) return `No arrivals found for mode: ${mode}`;
-          const sorted = [...data].sort(
-            (a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0),
-          );
+          const sorted = [...data].sort((a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0));
           const formatted = sorted.slice(0, 50).map((a) => {
             const mins =
               a.timeToStation != null

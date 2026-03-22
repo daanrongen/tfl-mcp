@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ManagedRuntime } from "effect";
-import type { TflClient } from "../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../domain/errors.ts";
+import type { TflClient } from "../domain/TflClient.ts";
 import { registerAccidentTools } from "./tools/accident.ts";
 import { registerAirQualityTools } from "./tools/air-quality.ts";
 import { registerBikePointTools } from "./tools/bike-point.ts";
@@ -17,10 +17,7 @@ import { registerStopPointTools } from "./tools/stop-point.ts";
 import { registerVehicleTools } from "./tools/vehicle.ts";
 
 export const createMcpServer = (
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ): McpServer => {
   const server = new McpServer({
     name: "tfl-mcp-server",

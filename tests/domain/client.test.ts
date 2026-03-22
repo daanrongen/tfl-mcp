@@ -1,20 +1,15 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { TflClient } from "../../src/domain/TflClient.ts";
 import { TflError } from "../../src/domain/errors.ts";
-import {
-  TflClientTest,
-  makeTflClientTest,
-} from "../../src/infra/TflClientTest.ts";
+import { TflClient } from "../../src/domain/TflClient.ts";
+import { makeTflClientTest, TflClientTest } from "../../src/infra/TflClientTest.ts";
 
 describe("TflClient", () => {
   it("returns fixture data for a known path prefix", async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* TflClient;
-        return yield* client.request<Array<{ modeName?: string }>>(
-          "/Line/Meta/Modes",
-        );
+        return yield* client.request<Array<{ modeName?: string }>>("/Line/Meta/Modes");
       }).pipe(Effect.provide(TflClientTest)),
     );
     expect(Array.isArray(result)).toBe(true);
@@ -36,9 +31,7 @@ describe("TflClient", () => {
   });
 
   it("supports custom handlers via makeTflClientTest", async () => {
-    const handlers = new Map<string, unknown>([
-      ["/Custom/Path", { value: 42 }],
-    ]);
+    const handlers = new Map<string, unknown>([["/Custom/Path", { value: 42 }]]);
     const layer = makeTflClientTest(handlers);
 
     const result = await Effect.runPromise(
@@ -64,9 +57,7 @@ describe("TflClient", () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* TflClient;
-        return yield* client.request<Array<{ mode?: string }>>(
-          "/Journey/Meta/Modes",
-        );
+        return yield* client.request<Array<{ mode?: string }>>("/Journey/Meta/Modes");
       }).pipe(Effect.provide(TflClientTest)),
     );
     expect(Array.isArray(result)).toBe(true);

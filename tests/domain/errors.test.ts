@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { TflClient } from "../../src/domain/TflClient.ts";
 import { TflDisambiguationError, TflError } from "../../src/domain/errors.ts";
+import { TflClient } from "../../src/domain/TflClient.ts";
 import { makeTflClientTest } from "../../src/infra/TflClientTest.ts";
 
 describe("TflError", () => {
@@ -38,10 +38,9 @@ describe("TflDisambiguationError", () => {
       },
     };
     const err = new TflDisambiguationError({ result });
-    expect(
-      err.result.fromLocationDisambiguation?.disambiguationOptions?.[0]
-        ?.parameterValue,
-    ).toBe("1000129");
+    expect(err.result.fromLocationDisambiguation?.disambiguationOptions?.[0]?.parameterValue).toBe(
+      "1000129",
+    );
   });
 });
 

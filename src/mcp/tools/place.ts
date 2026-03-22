@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type Place = {
@@ -18,10 +18,7 @@ const formatPlace = (p: Place): string =>
 
 export const registerPlaceTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "place_search",
@@ -30,9 +27,7 @@ export const registerPlaceTools = (
       name: z
         .string()
         .min(1)
-        .describe(
-          "Place name to search for (e.g. 'Victoria', 'London Bridge')",
-        ),
+        .describe("Place name to search for (e.g. 'Victoria', 'London Bridge')"),
       types: z
         .string()
         .optional()
@@ -85,10 +80,9 @@ export const registerPlaceTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Place>(
-            `/Place/${encodeURIComponent(id)}`,
-            { includeChildren },
-          );
+          const data = yield* client.request<Place>(`/Place/${encodeURIComponent(id)}`, {
+            includeChildren,
+          });
           return formatPlace(data);
         }),
       );
@@ -103,23 +97,12 @@ export const registerPlaceTools = (
     {
       lat: z.number().describe("Latitude"),
       lon: z.number().describe("Longitude"),
-      radius: z
-        .number()
-        .positive()
-        .optional()
-        .describe("Search radius in metres"),
+      radius: z.number().positive().optional().describe("Search radius in metres"),
       types: z
         .string()
         .optional()
-        .describe(
-          "Comma-separated place types to filter by (e.g. 'StopPoint,NaptanMetroStation')",
-        ),
-      maxResults: z
-        .number()
-        .int()
-        .positive()
-        .optional()
-        .describe("Maximum results to return"),
+        .describe("Comma-separated place types to filter by (e.g. 'StopPoint,NaptanMetroStation')"),
+      maxResults: z.number().int().positive().optional().describe("Maximum results to return"),
     },
     {
       title: "Places by Location",
@@ -163,9 +146,7 @@ export const registerPlaceTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Array<{ type?: string }>>(
-            "/Place/Meta/PlaceTypes",
-          );
+          const data = yield* client.request<Array<{ type?: string }>>("/Place/Meta/PlaceTypes");
           return `Place types:\n\n${data.map((t) => t.type ?? "?").join("\n")}`;
         }),
       );
@@ -195,9 +176,7 @@ export const registerPlaceTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Place[]>(
-            `/Place/Type/${encodeURIComponent(types)}`,
-          );
+          const data = yield* client.request<Place[]>(`/Place/Type/${encodeURIComponent(types)}`);
           return `Places of type "${types}" (${data.length}):\n\n${data.map(formatPlace).join("\n")}`;
         }),
       );

@@ -1,16 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 export const registerAccidentTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "accident_stats",
@@ -21,9 +18,7 @@ export const registerAccidentTools = (
         .int()
         .min(2005)
         .max(new Date().getFullYear() - 1)
-        .describe(
-          "The year for which to retrieve accident statistics (e.g. 2023)",
-        ),
+        .describe("The year for which to retrieve accident statistics (e.g. 2023)"),
     },
     {
       title: "TfL Accident Statistics",
@@ -36,9 +31,7 @@ export const registerAccidentTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown[]>(
-            `/AccidentStats/${year}`,
-          );
+          const data = yield* client.request<unknown[]>(`/AccidentStats/${year}`);
           const count = Array.isArray(data) ? data.length : "unknown";
           return `Accident statistics for ${year} (${count} incidents):\n\n${JSON.stringify(data, null, 2)}`;
         }),

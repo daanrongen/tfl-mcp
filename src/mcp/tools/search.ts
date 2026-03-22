@@ -1,16 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 export const registerSearchTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "search",
@@ -19,9 +16,7 @@ export const registerSearchTools = (
       query: z
         .string()
         .min(1)
-        .describe(
-          "Search term (e.g. 'Victoria', 'Waterloo', 'Northern line', 'bus 25')",
-        ),
+        .describe("Search term (e.g. 'Victoria', 'Waterloo', 'Northern line', 'bus 25')"),
     },
     {
       title: "TfL Search",
@@ -47,11 +42,7 @@ export const registerSearchTools = (
     "search_bus_schedules",
     "Searches for bus schedule documents on TfL's S3 storage for a given bus route number.",
     {
-      query: z
-        .string()
-        .describe(
-          "Bus route number or name to search for (e.g. '25', '73', 'N25')",
-        ),
+      query: z.string().describe("Bus route number or name to search for (e.g. '25', '73', 'N25')"),
     },
     {
       title: "Bus Schedule Search",
@@ -90,9 +81,7 @@ export const registerSearchTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            "/Search/Meta/Categories",
-          );
+          const data = yield* client.request<unknown>("/Search/Meta/Categories");
           return `Search categories:\n\n${JSON.stringify(data, null, 2)}`;
         }),
       );
@@ -116,9 +105,7 @@ export const registerSearchTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            "/Search/Meta/SearchProviders",
-          );
+          const data = yield* client.request<unknown>("/Search/Meta/SearchProviders");
           return `Search providers:\n\n${JSON.stringify(data, null, 2)}`;
         }),
       );

@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type CarPark = {
@@ -29,10 +29,7 @@ type BikePointOccupancy = {
 const formatCarPark = (cp: CarPark): string => {
   const bayInfo =
     cp.bays
-      ?.map(
-        (b) =>
-          `  ${b.bayType ?? "?"}: ${b.free ?? "?"} free / ${b.bayCount ?? "?"} total`,
-      )
+      ?.map((b) => `  ${b.bayType ?? "?"}: ${b.free ?? "?"} free / ${b.bayCount ?? "?"} total`)
       .join("\n") ?? "  No bay data";
   return [
     `Car Park: ${cp.name ?? cp.id ?? "?"}`,
@@ -45,10 +42,7 @@ const formatCarPark = (cp: CarPark): string => {
 
 export const registerOccupancyTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "occupancy_car_parks_all",
@@ -81,9 +75,7 @@ export const registerOccupancyTools = (
     {
       id: z
         .string()
-        .describe(
-          "Car park ID (e.g. 'CarParks_800491'). Use occupancy_car_parks_all to find IDs.",
-        ),
+        .describe("Car park ID (e.g. 'CarParks_800491'). Use occupancy_car_parks_all to find IDs."),
     },
     {
       title: "Car Park Occupancy by ID",
@@ -158,13 +150,10 @@ export const registerOccupancyTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<ChargeConnector[]>(
-            "/Occupancy/ChargeConnector",
-          );
+          const data = yield* client.request<ChargeConnector[]>("/Occupancy/ChargeConnector");
           if (!data.length) return "No charge connector data available.";
           const formatted = data.map(
-            (c) =>
-              `${c.sourceSystemPlaceId ?? c.id ?? "?"}: ${c.status ?? "?"}`,
+            (c) => `${c.sourceSystemPlaceId ?? c.id ?? "?"}: ${c.status ?? "?"}`,
           );
           return `Charge connector statuses (${data.length} connectors):\n\n${formatted.join("\n")}`;
         }),
@@ -199,8 +188,7 @@ export const registerOccupancyTools = (
             `/Occupancy/ChargeConnector/${encodeURIComponent(ids)}`,
           );
           const formatted = data.map(
-            (c) =>
-              `${c.sourceSystemPlaceId ?? c.id ?? "?"}: ${c.status ?? "?"}`,
+            (c) => `${c.sourceSystemPlaceId ?? c.id ?? "?"}: ${c.status ?? "?"}`,
           );
           return `Charge connector statuses:\n\n${formatted.join("\n")}`;
         }),

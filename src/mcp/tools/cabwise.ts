@@ -1,16 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 export const registerCabwiseTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "cabwise_search",
@@ -26,11 +23,7 @@ export const registerCabwiseTools = (
         .min(-0.6)
         .max(0.4)
         .describe("Longitude of the search location (within Greater London)"),
-      radius: z
-        .number()
-        .positive()
-        .optional()
-        .describe("Search radius in metres (default: 1000)"),
+      radius: z.number().positive().optional().describe("Search radius in metres (default: 1000)"),
       optype: z
         .enum(["Minicab", "BlackCab"])
         .optional()
@@ -46,10 +39,7 @@ export const registerCabwiseTools = (
         .boolean()
         .optional()
         .describe("If true, only return operators available 24/7"),
-      wc: z
-        .boolean()
-        .optional()
-        .describe("If true, include wheelchair-accessible vehicles only"),
+      wc: z.boolean().optional().describe("If true, include wheelchair-accessible vehicles only"),
     },
     {
       title: "Cabwise Search",
@@ -58,16 +48,7 @@ export const registerCabwiseTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({
-      lat,
-      lon,
-      radius,
-      optype,
-      name,
-      maxResults,
-      twentyFourSevenOnly,
-      wc,
-    }) => {
+    async ({ lat, lon, radius, optype, name, maxResults, twentyFourSevenOnly, wc }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;

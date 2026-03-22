@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type AdditionalProperty = { key?: string; value?: string };
@@ -32,10 +32,7 @@ const formatBikePoint = (bp: BikePoint): string =>
 
 export const registerBikePointTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "bike_points_all",
@@ -102,9 +99,7 @@ export const registerBikePointTools = (
     {
       id: z
         .string()
-        .describe(
-          "The bike point ID (e.g. 'BikePoints_1'). Use bike_point_search to find IDs.",
-        ),
+        .describe("The bike point ID (e.g. 'BikePoints_1'). Use bike_point_search to find IDs."),
     },
     {
       title: "Bike Point by ID",
@@ -117,9 +112,7 @@ export const registerBikePointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<BikePoint>(
-            `/BikePoint/${encodeURIComponent(id)}`,
-          );
+          const data = yield* client.request<BikePoint>(`/BikePoint/${encodeURIComponent(id)}`);
           return formatBikePoint(data);
         }),
       );

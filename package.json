@@ -4,10 +4,12 @@
   "description": "MCP server for the Transport for London (TfL) Unified API — lines, journeys, stop points, arrivals, bike points, and more over stdio",
   "type": "module",
   "bin": {
-    "tfl-mcp": "./dist/main.js"
+    "tfl-mcp": "dist/main.js"
   },
   "main": "./dist/main.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "start": "bun run src/main.ts",
     "dev": "bun --watch src/main.ts",
@@ -46,7 +48,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.4.8",
     "bun-types": "latest",
     "lefthook": "^2.1.4",
     "typescript": "^5.8.3"

@@ -1,6 +1,6 @@
 import { Effect, Layer } from "effect";
-import { TflClient } from "../domain/TflClient.ts";
 import { TflError } from "../domain/errors.ts";
+import { TflClient } from "../domain/TflClient.ts";
 
 /**
  * In-memory test adapter for TflClient.
@@ -17,9 +17,7 @@ export const makeTflClientTest = (handlers: TflTestHandlers = new Map()) =>
           return Effect.succeed(data as T);
         }
       }
-      return Effect.fail(
-        new TflError({ message: `No test handler for path: ${path}` }),
-      );
+      return Effect.fail(new TflError({ message: `No test handler for path: ${path}` }));
     },
   });
 

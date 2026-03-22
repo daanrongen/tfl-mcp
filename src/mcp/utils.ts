@@ -32,19 +32,14 @@ export const formatDisambiguation = (result: DisambiguationResult): string => {
     ["To", "toLocationDisambiguation"],
   ] as const) {
     const d = result[key];
-    if (!d || d.matchStatus === "identified" || d.matchStatus === "empty")
-      continue;
+    if (!d || d.matchStatus === "identified" || d.matchStatus === "empty") continue;
     const opts = d.disambiguationOptions?.slice(0, 5) ?? [];
     if (!opts.length) continue;
-    lines.push(
-      `${side} — possible matches (use parameterValue as the \`from\`/\`to\` argument):`,
-    );
+    lines.push(`${side} — possible matches (use parameterValue as the \`from\`/\`to\` argument):`);
     for (const opt of opts) {
       const name = opt.place.commonName ?? "?";
       const type = opt.place.placeType ?? "";
-      lines.push(
-        `  • "${opt.parameterValue}"  →  ${name}${type ? ` (${type})` : ""}`,
-      );
+      lines.push(`  • "${opt.parameterValue}"  →  ${name}${type ? ` (${type})` : ""}`);
     }
     lines.push("");
   }

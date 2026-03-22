@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type VehicleCompliance = {
@@ -34,10 +34,7 @@ type VehicleArrival = {
   expectedArrival?: string;
 };
 
-const formatCompliance = (
-  v: VehicleCompliance,
-  type: "ULEZ" | "Emission",
-): string => {
+const formatCompliance = (v: VehicleCompliance, type: "ULEZ" | "Emission"): string => {
   const lines = [
     `VRM: ${v.vrm ?? "?"}`,
     `Make/Model: ${v.make ?? "?"} ${v.model ?? ""}`.trim(),
@@ -60,10 +57,7 @@ const formatCompliance = (
 
 export const registerVehicleTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "vehicle_ulez_compliance",
@@ -71,9 +65,7 @@ export const registerVehicleTools = (
     {
       vrm: z
         .string()
-        .describe(
-          "Vehicle Registration Mark (number plate) to check (e.g. 'AB12CDE')",
-        ),
+        .describe("Vehicle Registration Mark (number plate) to check (e.g. 'AB12CDE')"),
     },
     {
       title: "Vehicle ULEZ Compliance",
@@ -86,10 +78,9 @@ export const registerVehicleTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<VehicleCompliance[]>(
-            "/Vehicle/EmissionSurcharge",
-            { vrm },
-          );
+          const data = yield* client.request<VehicleCompliance[]>("/Vehicle/EmissionSurcharge", {
+            vrm,
+          });
           if (!data.length) return `No compliance data found for VRM: ${vrm}`;
           return data.map((v) => formatCompliance(v, "ULEZ")).join("\n\n");
         }),
@@ -103,9 +94,7 @@ export const registerVehicleTools = (
     "vehicle_emission_surcharge",
     "Gets emission surcharge (CAZ/LEZ) compliance information for a vehicle by registration.",
     {
-      vrm: z
-        .string()
-        .describe("Vehicle Registration Mark (number plate) to check"),
+      vrm: z.string().describe("Vehicle Registration Mark (number plate) to check"),
     },
     {
       title: "Vehicle Emission Surcharge",
@@ -118,12 +107,10 @@ export const registerVehicleTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<VehicleCompliance[]>(
-            "/Vehicle/EmissionSurcharge",
-            { vrm },
-          );
-          if (!data.length)
-            return `No emission surcharge data found for VRM: ${vrm}`;
+          const data = yield* client.request<VehicleCompliance[]>("/Vehicle/EmissionSurcharge", {
+            vrm,
+          });
+          if (!data.length) return `No emission surcharge data found for VRM: ${vrm}`;
           return data.map((v) => formatCompliance(v, "Emission")).join("\n\n");
         }),
       );
@@ -156,11 +143,8 @@ export const registerVehicleTools = (
           const data = yield* client.request<VehicleArrival[]>(
             `/Vehicle/${encodeURIComponent(vehicleIds)}/Arrivals`,
           );
-          if (!data.length)
-            return `No arrival predictions for vehicle(s): ${vehicleIds}`;
-          const sorted = [...data].sort(
-            (a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0),
-          );
+          if (!data.length) return `No arrival predictions for vehicle(s): ${vehicleIds}`;
+          const sorted = [...data].sort((a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0));
           const formatted = sorted.map((a) => {
             const mins =
               a.timeToStation != null

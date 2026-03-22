@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatDisambiguation, formatError, formatSuccess } from "../utils.ts";
 
 type JourneyLeg = {
@@ -47,10 +47,7 @@ const formatJourney = (j: Journey, index: number): string => {
 
 export const registerJourneyTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "journey_plan",
@@ -66,28 +63,19 @@ export const registerJourneyTools = (
         .describe(
           "Destination location — same formats as 'from' (stop ID, postcode, coordinates, or place name)",
         ),
-      via: z
-        .string()
-        .optional()
-        .describe("Optional intermediate stop/location to travel via"),
+      via: z.string().optional().describe("Optional intermediate stop/location to travel via"),
       date: z
         .string()
         .optional()
-        .describe(
-          "Date of travel in YYYYMMDD format (e.g. '20240315'). Defaults to today.",
-        ),
+        .describe("Date of travel in YYYYMMDD format (e.g. '20240315'). Defaults to today."),
       time: z
         .string()
         .optional()
-        .describe(
-          "Time of travel in HHMM format (e.g. '0830'). Defaults to now.",
-        ),
+        .describe("Time of travel in HHMM format (e.g. '0830'). Defaults to now."),
       timeIs: z
         .enum(["Departing", "Arriving"])
         .optional()
-        .describe(
-          "Whether the given time is a departure or arrival time (default: 'Departing')",
-        ),
+        .describe("Whether the given time is a departure or arrival time (default: 'Departing')"),
       journeyPreference: z
         .enum(["LeastInterchange", "LeastTime", "LeastWalking"])
         .optional()
@@ -116,9 +104,7 @@ export const registerJourneyTools = (
       cyclePreference: z
         .string()
         .optional()
-        .describe(
-          "Cycle route preference (e.g. 'AllTheWay', 'LeaveAtStation', 'TakeOnTransport')",
-        ),
+        .describe("Cycle route preference (e.g. 'AllTheWay', 'LeaveAtStation', 'TakeOnTransport')"),
       alternativeCycle: z
         .boolean()
         .optional()
@@ -180,8 +166,7 @@ export const registerJourneyTools = (
             },
           );
           const journeys = data.journeys ?? [];
-          if (!journeys.length)
-            return "No journeys found for the given parameters.";
+          if (!journeys.length) return "No journeys found for the given parameters.";
           return `Journey options from "${from}" to "${to}":\n\n${journeys.map(formatJourney).join("\n\n")}`;
         }).pipe(
           Effect.catchTag("TflDisambiguationError", (e) =>
@@ -209,12 +194,11 @@ export const registerJourneyTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{ mode?: string; isTflService?: boolean }>
-          >("/Journey/Meta/Modes");
-          const modes = data.map(
-            (m) => `${m.mode ?? "??"} (TfL: ${m.isTflService ?? false})`,
-          );
+          const data =
+            yield* client.request<Array<{ mode?: string; isTflService?: boolean }>>(
+              "/Journey/Meta/Modes",
+            );
+          const modes = data.map((m) => `${m.mode ?? "??"} (TfL: ${m.isTflService ?? false})`);
           return `Available journey modes:\n\n${modes.join("\n")}`;
         }),
       );

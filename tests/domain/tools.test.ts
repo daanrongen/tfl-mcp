@@ -1,19 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
 import { TflClient } from "../../src/domain/TflClient.ts";
-import {
-  TflClientTest,
-  makeTflClientTest,
-} from "../../src/infra/TflClientTest.ts";
+import { makeTflClientTest, TflClientTest } from "../../src/infra/TflClientTest.ts";
 
 describe("line tools data", () => {
   it("line meta modes returns an array of mode names", async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* TflClient;
-        return yield* client.request<Array<{ modeName?: string }>>(
-          "/Line/Meta/Modes",
-        );
+        return yield* client.request<Array<{ modeName?: string }>>("/Line/Meta/Modes");
       }).pipe(Effect.provide(TflClientTest)),
     );
     expect(result.map((m) => m.modeName)).toContain("tube");
@@ -26,9 +21,9 @@ describe("stop point tools data", () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* TflClient;
-        return yield* client.request<
-          Array<{ modeName?: string; isTflService?: boolean }>
-        >("/StopPoint/Meta/Modes");
+        return yield* client.request<Array<{ modeName?: string; isTflService?: boolean }>>(
+          "/StopPoint/Meta/Modes",
+        );
       }).pipe(Effect.provide(TflClientTest)),
     );
     expect(result.length).toBeGreaterThan(0);
@@ -68,9 +63,9 @@ describe("mode tools data", () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* TflClient;
-        return yield* client.request<
-          Array<{ mode?: string; serviceType?: string }>
-        >("/Mode/ActiveServiceTypes");
+        return yield* client.request<Array<{ mode?: string; serviceType?: string }>>(
+          "/Mode/ActiveServiceTypes",
+        );
       }).pipe(Effect.provide(TflClientTest)),
     );
     expect(result[0]?.mode).toBe("tube");
@@ -162,9 +157,7 @@ describe("custom fixture handlers", () => {
       }).pipe(Effect.provide(layer)),
     );
     expect(result.commonName).toBe("River Street, Clerkenwell");
-    const nbBikes = result.additionalProperties?.find(
-      (p) => p.key === "NbBikes",
-    )?.value;
+    const nbBikes = result.additionalProperties?.find((p) => p.key === "NbBikes")?.value;
     expect(nbBikes).toBe("5");
   });
 });

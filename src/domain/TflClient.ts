@@ -8,7 +8,4 @@ export interface TflClientService {
   ) => Effect.Effect<T, TflError | TflDisambiguationError>;
 }
 
-export class TflClient extends Context.Tag("TflClient")<
-  TflClient,
-  TflClientService
->() {}
+export class TflClient extends Context.Tag("TflClient")<TflClient, TflClientService>() {}

@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type Road = {
@@ -51,10 +51,7 @@ const formatDisruption = (d: RoadDisruption): string => {
 
 export const registerRoadTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
     "road_all",
@@ -101,9 +98,7 @@ export const registerRoadTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Road[]>(
-            `/Road/${encodeURIComponent(ids)}`,
-          );
+          const data = yield* client.request<Road[]>(`/Road/${encodeURIComponent(ids)}`);
           return `Road status:\n\n${data.map(formatRoad).join("\n\n")}`;
         }),
       );
@@ -125,14 +120,8 @@ export const registerRoadTools = (
         .string()
         .optional()
         .describe("Comma-separated severity filter (e.g. 'Serious,Severe')"),
-      categories: z
-        .string()
-        .optional()
-        .describe("Comma-separated category filter"),
-      closures: z
-        .boolean()
-        .optional()
-        .describe("If true, only return closures"),
+      categories: z.string().optional().describe("Comma-separated category filter"),
+      closures: z.boolean().optional().describe("If true, only return closures"),
     },
     {
       title: "Road Disruptions",
@@ -170,14 +159,8 @@ export const registerRoadTools = (
         .string()
         .optional()
         .describe("Comma-separated severity filter (e.g. 'Serious,Severe')"),
-      categories: z
-        .string()
-        .optional()
-        .describe("Comma-separated category filter"),
-      closures: z
-        .boolean()
-        .optional()
-        .describe("If true, only return closures"),
+      categories: z.string().optional().describe("Comma-separated category filter"),
+      closures: z.boolean().optional().describe("If true, only return closures"),
     },
     {
       title: "All Road Disruptions",
@@ -190,15 +173,12 @@ export const registerRoadTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<RoadDisruption[]>(
-            "/Road/all/Disruption",
-            {
-              stripContent,
-              severities,
-              categories,
-              closures,
-            },
-          );
+          const data = yield* client.request<RoadDisruption[]>("/Road/all/Disruption", {
+            stripContent,
+            severities,
+            categories,
+            closures,
+          });
           if (!data.length) return "No active road disruptions on the TLRN.";
           return `All TLRN disruptions (${data.length}):\n\n${data.map(formatDisruption).join("\n---\n")}`;
         }),

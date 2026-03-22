@@ -5,9 +5,7 @@ export class TflError extends Data.TaggedError("TflError")<{
   readonly cause?: unknown;
 }> {}
 
-export class TflDisambiguationError extends Data.TaggedError(
-  "TflDisambiguationError",
-)<{
+export class TflDisambiguationError extends Data.TaggedError("TflDisambiguationError")<{
   readonly result: DisambiguationResult;
 }> {}
 

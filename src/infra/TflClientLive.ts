@@ -1,11 +1,7 @@
 import { Effect, Layer, Option } from "effect";
 import { TflApiKeyConfig } from "../config.ts";
+import { type DisambiguationResult, TflDisambiguationError, TflError } from "../domain/errors.ts";
 import { TflClient } from "../domain/TflClient.ts";
-import {
-  type DisambiguationResult,
-  TflDisambiguationError,
-  TflError,
-} from "../domain/errors.ts";
 
 const TFL_API_BASE = "https://api.tfl.gov.uk";
 const USER_AGENT = "tfl-mcp/1.0";
@@ -67,9 +63,7 @@ export const TflClientLive = Layer.effect(
 
             if (!response.ok) {
               const body = await response.text().catch(() => "");
-              throw new Error(
-                `TfL API error ${response.status}: ${response.statusText}. ${body}`,
-              );
+              throw new Error(`TfL API error ${response.status}: ${response.statusText}. ${body}`);
             }
 
             return response.json() as Promise<T>;
@@ -79,8 +73,7 @@ export const TflClientLive = Layer.effect(
               return new TflDisambiguationError({ result: e.result });
             }
             return new TflError({
-              message:
-                e instanceof Error ? e.message : `TfL request failed: ${path}`,
+              message: e instanceof Error ? e.message : `TfL request failed: ${path}`,
               cause: e,
             });
           },

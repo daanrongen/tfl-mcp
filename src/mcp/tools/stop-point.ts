@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
-import { TflClient } from "../../domain/TflClient.ts";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
+import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type StopPoint = {
@@ -35,17 +35,13 @@ const formatStop = (s: StopPoint): string => {
 };
 
 const formatArrival = (a: ArrivalPrediction): string => {
-  const mins =
-    a.timeToStation != null ? Math.round(a.timeToStation / 60) : null;
+  const mins = a.timeToStation != null ? Math.round(a.timeToStation / 60) : null;
   return `  ${a.lineName ?? "?"} → ${a.destinationName ?? "?"} via ${a.platformName ?? "?"} — ${mins != null ? `${mins} min` : (a.expectedArrival ?? "?")}`;
 };
 
 export const registerStopPointTools = (
   server: McpServer,
-  runtime: ManagedRuntime.ManagedRuntime<
-    TflClient,
-    TflError | TflDisambiguationError
-  >,
+  runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   // --- Meta ---
   server.tool(
@@ -63,12 +59,11 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{ modeName?: string; isTflService?: boolean }>
-          >("/StopPoint/Meta/Modes");
-          const modes = data.map(
-            (m) => `${m.modeName ?? "?"} (TfL: ${m.isTflService ?? false})`,
-          );
+          const data =
+            yield* client.request<Array<{ modeName?: string; isTflService?: boolean }>>(
+              "/StopPoint/Meta/Modes",
+            );
+          const modes = data.map((m) => `${m.modeName ?? "?"} (TfL: ${m.isTflService ?? false})`);
           return `StopPoint modes:\n\n${modes.join("\n")}`;
         }),
       );
@@ -92,9 +87,7 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<string[]>(
-            "/StopPoint/Meta/StopTypes",
-          );
+          const data = yield* client.request<string[]>("/StopPoint/Meta/StopTypes");
           return `Stop point types:\n\n${data.join("\n")}`;
         }),
       );
@@ -118,9 +111,7 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            "/StopPoint/Meta/Categories",
-          );
+          const data = yield* client.request<unknown>("/StopPoint/Meta/Categories");
           return `StopPoint categories:\n\n${JSON.stringify(data, null, 2)}`;
         }),
       );
@@ -140,27 +131,11 @@ export const registerStopPointTools = (
         .describe(
           "Stop name, partial name, or 5-digit bus stop SMS code (e.g. 'Victoria', 'Kings Cross', '73241')",
         ),
-      modes: z
-        .string()
-        .optional()
-        .describe("Comma-separated mode filters (e.g. 'tube,bus,dlr')"),
-      maxResults: z
-        .number()
-        .int()
-        .optional()
-        .describe("Maximum number of results (default: 50)"),
-      lines: z
-        .string()
-        .optional()
-        .describe("Comma-separated line IDs to filter by"),
-      faresOnly: z
-        .boolean()
-        .optional()
-        .describe("If true, only return stops where fares apply"),
-      includeHubs: z
-        .boolean()
-        .optional()
-        .describe("If true, include interchange hub stops"),
+      modes: z.string().optional().describe("Comma-separated mode filters (e.g. 'tube,bus,dlr')"),
+      maxResults: z.number().int().optional().describe("Maximum number of results (default: 50)"),
+      lines: z.string().optional().describe("Comma-separated line IDs to filter by"),
+      faresOnly: z.boolean().optional().describe("If true, only return stops where fares apply"),
+      includeHubs: z.boolean().optional().describe("If true, include interchange hub stops"),
       tflOperatedNationalRailStationsOnly: z
         .boolean()
         .optional()
@@ -198,8 +173,7 @@ export const registerStopPointTools = (
             tflOperatedNationalRailStationsOnly,
           });
           const matches = data.matches ?? [];
-          if (!matches.length)
-            return `No stop points found matching "${query}".`;
+          if (!matches.length) return `No stop points found matching "${query}".`;
           const header = `Stop points matching "${query}" (${matches.length} of ${data.total ?? "?"}):\n(Use the 'ID' value in journey_plan for unambiguous routing)\n`;
           return `${header}\n${matches.map(formatStop).join("\n")}`;
         }),
@@ -234,10 +208,9 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<StopPoint[]>(
-            `/StopPoint/${encodeURIComponent(ids)}`,
-            { includeCrowdingData },
-          );
+          const data = yield* client.request<StopPoint[]>(`/StopPoint/${encodeURIComponent(ids)}`, {
+            includeCrowdingData,
+          });
           return `Stop point details:\n\n${data.map(formatStop).join("\n")}`;
         }),
       );
@@ -250,14 +223,8 @@ export const registerStopPointTools = (
     "stoppoint_by_sms",
     "Gets a stop point by its 5-digit SMS bus stop code (used for TfL's SMS arrival checker service).",
     {
-      id: z
-        .string()
-        .length(5)
-        .describe("5-digit SMS bus stop code (e.g. '73241')"),
-      output: z
-        .string()
-        .optional()
-        .describe("Output format (leave blank for default)"),
+      id: z.string().length(5).describe("5-digit SMS bus stop code (e.g. '73241')"),
+      output: z.string().optional().describe("Output format (leave blank for default)"),
     },
     {
       title: "StopPoint by SMS Code",
@@ -332,19 +299,16 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<{ stopPoints?: StopPoint[] }>(
-            "/StopPoint",
-            {
-              "location.lat": lat,
-              "location.lon": lon,
-              stopTypes,
-              radius,
-              modes,
-              useStopPointHierarchy,
-              categories,
-              returnLines,
-            },
-          );
+          const data = yield* client.request<{ stopPoints?: StopPoint[] }>("/StopPoint", {
+            "location.lat": lat,
+            "location.lon": lon,
+            stopTypes,
+            radius,
+            modes,
+            useStopPointHierarchy,
+            categories,
+            returnLines,
+          });
           const stops = data.stopPoints ?? [];
           if (!stops.length)
             return `No stop points found near (${lat}, ${lon}) within ${radius ?? 200}m.`;
@@ -360,9 +324,7 @@ export const registerStopPointTools = (
     "stoppoint_by_mode",
     "Gets all stop points filtered by transport mode. Supports pagination.",
     {
-      modes: z
-        .string()
-        .describe("Comma-separated modes (e.g. 'tube', 'dlr', 'overground')"),
+      modes: z.string().describe("Comma-separated modes (e.g. 'tube', 'dlr', 'overground')"),
       page: z
         .number()
         .int()
@@ -402,11 +364,7 @@ export const registerStopPointTools = (
         .describe(
           "Comma-separated stop types (e.g. 'NaptanMetroStation'). Use stoppoint_meta_stop_types to list valid types.",
         ),
-      page: z
-        .number()
-        .int()
-        .optional()
-        .describe("Page number for large result sets"),
+      page: z.number().int().optional().describe("Page number for large result sets"),
     },
     {
       title: "StopPoints by Type",
@@ -436,14 +394,8 @@ export const registerStopPointTools = (
     "Gets the service types (Regular, Night) available at a specific stop point.",
     {
       id: z.string().describe("Stop point Naptan ID"),
-      lineIds: z
-        .string()
-        .optional()
-        .describe("Comma-separated line IDs to filter by"),
-      modes: z
-        .string()
-        .optional()
-        .describe("Comma-separated modes to filter by"),
+      lineIds: z.string().optional().describe("Comma-separated line IDs to filter by"),
+      modes: z.string().optional().describe("Comma-separated modes to filter by"),
     },
     {
       title: "StopPoint Service Types",
@@ -456,10 +408,11 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            "/StopPoint/ServiceTypes",
-            { id, lineIds, modes },
-          );
+          const data = yield* client.request<unknown>("/StopPoint/ServiceTypes", {
+            id,
+            lineIds,
+            modes,
+          });
           return `Service types at stop ${id}:\n\n${JSON.stringify(data, null, 2)}`;
         }),
       );
@@ -493,11 +446,8 @@ export const registerStopPointTools = (
           const data = yield* client.request<ArrivalPrediction[]>(
             `/StopPoint/${encodeURIComponent(id)}/Arrivals`,
           );
-          if (!data.length)
-            return `No arrivals currently predicted at stop ${id}.`;
-          const sorted = [...data].sort(
-            (a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0),
-          );
+          if (!data.length) return `No arrivals currently predicted at stop ${id}.`;
+          const sorted = [...data].sort((a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0));
           return `Arrivals at ${data[0]?.stationName ?? id}:\n${sorted.map(formatArrival).join("\n")}`;
         }),
       );
@@ -514,9 +464,7 @@ export const registerStopPointTools = (
       lineIds: z
         .string()
         .optional()
-        .describe(
-          "Comma-separated line IDs to filter (e.g. 'london-overground,elizabeth')",
-        ),
+        .describe("Comma-separated line IDs to filter (e.g. 'london-overground,elizabeth')"),
     },
     {
       title: "StopPoint Arrival/Departures",
@@ -548,10 +496,7 @@ export const registerStopPointTools = (
     "Gets all active disruptions at one or more stop points.",
     {
       ids: z.string().describe("Comma-separated stop point Naptan IDs"),
-      getFamily: z
-        .boolean()
-        .optional()
-        .describe("If true, include disruptions for child stops"),
+      getFamily: z.boolean().optional().describe("If true, include disruptions for child stops"),
       includeRouteBlockedStops: z
         .boolean()
         .optional()
@@ -630,9 +575,7 @@ export const registerStopPointTools = (
     "Gets all stop points that are reachable from a given station on a specific line — useful for showing where you can go without changing.",
     {
       id: z.string().describe("Origin stop point Naptan ID"),
-      lineId: z
-        .string()
-        .describe("Line ID to travel on (e.g. 'victoria', 'central')"),
+      lineId: z.string().describe("Line ID to travel on (e.g. 'victoria', 'central')"),
       serviceTypes: z
         .string()
         .optional()
@@ -735,9 +678,7 @@ export const registerStopPointTools = (
     {
       id: z.string().describe("Stop point Naptan ID"),
       line: z.string().describe("Line ID (e.g. 'victoria', 'central')"),
-      direction: z
-        .enum(["inbound", "outbound", "all"])
-        .describe("Direction of travel"),
+      direction: z.enum(["inbound", "outbound", "all"]).describe("Direction of travel"),
     },
     {
       title: "StopPoint Crowding",
@@ -826,9 +767,7 @@ export const registerStopPointTools = (
       id: z.string().describe("Stop point Naptan ID"),
       placeTypes: z
         .string()
-        .describe(
-          "Comma-separated place types to look up (e.g. 'AirportTerminal,CarPark')",
-        ),
+        .describe("Comma-separated place types to look up (e.g. 'AirportTerminal,CarPark')"),
     },
     {
       title: "StopPoint Place Types",
