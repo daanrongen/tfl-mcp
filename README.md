@@ -5,7 +5,7 @@ MCP server for the [Transport for London Unified API](https://api.tfl.gov.uk/) �
 ## Installation
 
 ```bash
-npx -y @daanrongen/tfl-mcp
+bunx @daanrongen/tfl-mcp
 ```
 
 ## Tools (80 total)
@@ -26,11 +26,13 @@ npx -y @daanrongen/tfl-mcp
 | **StopPoint**     | 17 tools                                                   | Search, arrivals, disruptions, crowding, routes, taxi ranks, car parks |
 | **Vehicle**       | 3 tools                                                    | ULEZ compliance, emissions surcharge, vehicle arrival tracking         |
 
-## Setup
+## Configuration
 
 ### API key (optional but recommended)
 
 Register for a free key at [https://api-portal.tfl.gov.uk/](https://api-portal.tfl.gov.uk/). Without one, requests are rate-limited to ~500/day.
+
+## Setup
 
 ### Claude Desktop
 
@@ -41,8 +43,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "tfl": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@daanrongen/tfl-mcp"],
+      "command": "bunx",
+      "args": ["@daanrongen/tfl-mcp"],
       "env": {
         "TFL_API_KEY": "your-key-here"
       }
@@ -51,10 +53,10 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-Or via the CLI:
+### Claude Code CLI
 
 ```bash
-claude mcp add tfl npx -- -y @daanrongen/tfl-mcp -e TFL_API_KEY=your-key-here
+claude mcp add tfl bunx -- @daanrongen/tfl-mcp -e TFL_API_KEY=your-key-here
 ```
 
 ## Development
@@ -123,3 +125,7 @@ src/
     ├── utils.ts        # formatSuccess, formatError, formatDisambiguation
     └── tools/          # One module per TfL domain (13 files)
 ```
+
+## License
+
+MIT

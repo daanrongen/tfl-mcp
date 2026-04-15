@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { TflDisambiguationError, TflError } from "../../src/domain/errors.ts";
-import { TflClient } from "../../src/domain/TflClient.ts";
-import { makeTflClientTest } from "../../src/infra/TflClientTest.ts";
+import { makeTflClientTest } from "../infra/TflClientTest.ts";
+import { TflDisambiguationError, TflError } from "./errors.ts";
+import { TflClient } from "./TflClient.ts";
 
 describe("TflError", () => {
   it("has the correct _tag", () => {
