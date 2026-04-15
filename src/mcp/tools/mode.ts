@@ -3,15 +3,8 @@ import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
 import { TflClient } from "../../domain/TflClient.ts";
+import { type ArrivalPrediction, formatArrival } from "../arrivals.ts";
 import { formatError, formatSuccess } from "../utils.ts";
-
-type ArrivalPrediction = {
-  stationName?: string;
-  lineName?: string;
-  destinationName?: string;
-  timeToStation?: number;
-  expectedArrival?: string;
-};
 
 export const registerModeTools = (
   server: McpServer,
@@ -79,13 +72,7 @@ export const registerModeTools = (
           );
           if (!data.length) return `No arrivals found for mode: ${mode}`;
           const sorted = [...data].sort((a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0));
-          const formatted = sorted.slice(0, 50).map((a) => {
-            const mins =
-              a.timeToStation != null
-                ? `${Math.round(a.timeToStation / 60)} min`
-                : (a.expectedArrival ?? "?");
-            return `${a.stationName ?? "?"} — ${a.lineName ?? "?"} to ${a.destinationName ?? "?"} (${mins})`;
-          });
+          const formatted = sorted.slice(0, 50).map(formatArrival);
           return `Next arrivals for ${mode} (showing up to 50):\n\n${formatted.join("\n")}`;
         }),
       );
