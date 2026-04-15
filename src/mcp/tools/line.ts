@@ -3,6 +3,7 @@ import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
 import { TflClient } from "../../domain/TflClient.ts";
+import { type ArrivalPrediction, formatArrival } from "../arrivals.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type LineStatus = { statusSeverityDescription?: string; reason?: string };
@@ -16,12 +17,6 @@ type Disruption = {
   category?: string;
   type?: string;
   description?: string;
-};
-type ArrivalPrediction = {
-  destinationName?: string;
-  platformName?: string;
-  timeToStation?: number;
-  expectedArrival?: string;
 };
 
 const formatLine = (line: Line): string => {
@@ -38,11 +33,6 @@ const formatDisruption = (d: Disruption): string =>
     `Type: ${d.type ?? "Unknown"}`,
     `Description: ${d.description ?? "None"}`,
   ].join("\n");
-
-const formatArrival = (a: ArrivalPrediction): string => {
-  const mins = a.timeToStation != null ? Math.round(a.timeToStation / 60) : null;
-  return `  → ${a.destinationName ?? "?"} via ${a.platformName ?? "?"} — ${mins != null ? `${mins} min` : (a.expectedArrival ?? "?")}`;
-};
 
 export const registerLineTools = (
   server: McpServer,

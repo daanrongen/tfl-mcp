@@ -3,6 +3,7 @@ import { Effect, type ManagedRuntime } from "effect";
 import { z } from "zod";
 import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
 import { TflClient } from "../../domain/TflClient.ts";
+import { type ArrivalPrediction, formatArrival } from "../arrivals.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 type StopPoint = {
@@ -17,26 +18,12 @@ type StopPoint = {
   lines?: Array<{ id?: string; name?: string }>;
 };
 
-type ArrivalPrediction = {
-  stationName?: string;
-  lineName?: string;
-  platformName?: string;
-  destinationName?: string;
-  timeToStation?: number;
-  expectedArrival?: string;
-};
-
 const stopId = (s: StopPoint): string => s.icsCode ?? s.naptanId ?? s.id ?? "?";
 
 const formatStop = (s: StopPoint): string => {
   const modes = s.modes?.join(", ") ?? "?";
   const lines = s.lines?.map((l) => l.name ?? l.id).join(", ") ?? "";
   return `${s.commonName ?? "??"} — ID: ${stopId(s)} — ${s.stopType ?? "?"} — modes: ${modes}${lines ? ` — lines: ${lines}` : ""}`;
-};
-
-const formatArrival = (a: ArrivalPrediction): string => {
-  const mins = a.timeToStation != null ? Math.round(a.timeToStation / 60) : null;
-  return `  ${a.lineName ?? "?"} → ${a.destinationName ?? "?"} via ${a.platformName ?? "?"} — ${mins != null ? `${mins} min` : (a.expectedArrival ?? "?")}`;
 };
 
 export const registerStopPointTools = (
