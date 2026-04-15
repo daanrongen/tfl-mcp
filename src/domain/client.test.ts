@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { TflError } from "../../src/domain/errors.ts";
-import { TflClient } from "../../src/domain/TflClient.ts";
-import { makeTflClientTest, TflClientTest } from "../../src/infra/TflClientTest.ts";
+import { makeTflClientTest, TflClientTest } from "../infra/TflClientTest.ts";
+import { TflError } from "./errors.ts";
+import { TflClient } from "./TflClient.ts";
 
 describe("TflClient", () => {
   it("returns fixture data for a known path prefix", async () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { TflClient } from "../../src/domain/TflClient.ts";
-import { makeTflClientTest, TflClientTest } from "../../src/infra/TflClientTest.ts";
+import { makeTflClientTest, TflClientTest } from "../infra/TflClientTest.ts";
+import { TflClient } from "./TflClient.ts";
 
 describe("line tools data", () => {
   it("line meta modes returns an array of mode names", async () => {
