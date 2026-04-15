@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ManagedRuntime } from "effect";
+import pkg from "../../package.json";
 import type { TflDisambiguationError, TflError } from "../domain/errors.ts";
 import type { TflClient } from "../domain/TflClient.ts";
 import { registerAccidentTools } from "./tools/accident.ts";
@@ -21,7 +22,7 @@ export const createMcpServer = (
 ): McpServer => {
   const server = new McpServer({
     name: "tfl-mcp-server",
-    version: "1.0.8",
+    version: pkg.version,
   });
 
   registerAccidentTools(server, runtime);
