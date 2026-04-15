@@ -34,13 +34,14 @@ type VehicleArrival = {
   expectedArrival?: string;
 };
 
-const formatCompliance = (v: VehicleCompliance, type: "ULEZ" | "Emission"): string => {
+const formatCompliance = (v: VehicleCompliance): string => {
   const lines = [
     `VRM: ${v.vrm ?? "?"}`,
     `Make/Model: ${v.make ?? "?"} ${v.model ?? ""}`.trim(),
     `Type: ${v.type ?? "?"}`,
     `Colour: ${v.colour ?? "?"}`,
-    `${type} Compliant: ${type === "ULEZ" ? v.isUlezCompliant : v.isCazCompliant}`,
+    `ULEZ Compliant: ${v.isUlezCompliant}`,
+    `CAZ Compliant: ${v.isCazCompliant}`,
     v.compliant ? `Status: ${v.compliant}` : "",
   ];
   if (v.charges?.length) {
@@ -60,41 +61,12 @@ export const registerVehicleTools = (
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
-    "vehicle_ulez_compliance",
-    "Checks whether a vehicle (by registration) is ULEZ-compliant. Returns compliance status, vehicle details, and any applicable charges.",
+    "vehicle_emission_surcharge",
+    "Checks emission zone compliance (ULEZ, CAZ, LEZ) for a vehicle by registration. Returns full compliance status across all schemes, vehicle details, and any applicable charges.",
     {
       vrm: z
         .string()
         .describe("Vehicle Registration Mark (number plate) to check (e.g. 'AB12CDE')"),
-    },
-    {
-      title: "Vehicle ULEZ Compliance",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ vrm }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<VehicleCompliance[]>("/Vehicle/EmissionSurcharge", {
-            vrm,
-          });
-          if (!data.length) return `No compliance data found for VRM: ${vrm}`;
-          return data.map((v) => formatCompliance(v, "ULEZ")).join("\n\n");
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "vehicle_emission_surcharge",
-    "Gets emission surcharge (CAZ/LEZ) compliance information for a vehicle by registration.",
-    {
-      vrm: z.string().describe("Vehicle Registration Mark (number plate) to check"),
     },
     {
       title: "Vehicle Emission Surcharge",
@@ -111,7 +83,7 @@ export const registerVehicleTools = (
             vrm,
           });
           if (!data.length) return `No emission surcharge data found for VRM: ${vrm}`;
-          return data.map((v) => formatCompliance(v, "Emission")).join("\n\n");
+          return data.map((v) => formatCompliance(v)).join("\n\n");
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
