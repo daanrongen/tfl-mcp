@@ -6,12 +6,6 @@ import { TflClient } from "../domain/TflClient.ts";
 const TFL_API_BASE = "https://api.tfl.gov.uk";
 const USER_AGENT = "tfl-mcp/1.0";
 
-/** Sentinel thrown inside the fetch promise to surface disambiguation responses. */
-class DisambiguationSentinel {
-  readonly _tag = "DisambiguationSentinel" as const;
-  constructor(readonly result: DisambiguationResult) {}
-}
-
 export const TflClientLive = Layer.effect(
   TflClient,
   Effect.gen(function* () {
@@ -29,54 +23,74 @@ export const TflClientLive = Layer.effect(
         path: string,
         params: Record<string, string | number | boolean | undefined> = {},
       ) =>
-        Effect.tryPromise({
-          try: async () => {
-            const url = new URL(`${TFL_API_BASE}${path}`);
+        Effect.gen(function* () {
+          const url = new URL(`${TFL_API_BASE}${path}`);
 
-            if (apiKey) {
-              url.searchParams.set("app_key", apiKey);
+          if (apiKey) {
+            url.searchParams.set("app_key", apiKey);
+          }
+
+          for (const [key, value] of Object.entries(params)) {
+            if (value !== undefined && value !== "") {
+              url.searchParams.set(key, String(value));
             }
+          }
 
-            for (const [key, value] of Object.entries(params)) {
-              if (value !== undefined && value !== null && value !== "") {
-                url.searchParams.set(key, String(value));
-              }
+          const response = yield* Effect.tryPromise({
+            try: () =>
+              fetch(url.toString(), {
+                headers: {
+                  "User-Agent": USER_AGENT,
+                  Accept: "application/json",
+                },
+              }),
+            catch: (e) =>
+              new TflError({
+                message: e instanceof Error ? e.message : `TfL request failed: ${path}`,
+                cause: e,
+              }),
+          });
+
+          if (response.status === 300) {
+            const raw = yield* Effect.tryPromise({
+              try: () => response.text(),
+              catch: () =>
+                new TflError({
+                  message: "Failed to read disambiguation response",
+                  cause: undefined,
+                }),
+            }).pipe(Effect.orElse(() => Effect.succeed("{}")));
+            let result: DisambiguationResult = {};
+            try {
+              result = JSON.parse(raw) as DisambiguationResult;
+            } catch {
+              // ignore — empty object is the safe fallback
             }
+            return yield* Effect.fail(new TflDisambiguationError({ result }));
+          }
 
-            const response = await fetch(url.toString(), {
-              headers: {
-                "User-Agent": USER_AGENT,
-                Accept: "application/json",
-              },
-            });
+          if (!response.ok) {
+            const body = yield* Effect.tryPromise({
+              try: () => response.text(),
+              catch: () =>
+                new TflError({ message: "Failed to read error response body", cause: undefined }),
+            }).pipe(Effect.orElse(() => Effect.succeed("")));
+            return yield* Effect.fail(
+              new TflError({
+                message: `TfL API error ${response.status}: ${response.statusText}. ${body}`,
+                cause: undefined,
+              }),
+            );
+          }
 
-            if (response.status === 300) {
-              const raw = await response.text().catch(() => "{}");
-              let result: DisambiguationResult = {};
-              try {
-                result = JSON.parse(raw) as DisambiguationResult;
-              } catch {
-                // ignore — empty object is the safe fallback
-              }
-              throw new DisambiguationSentinel(result);
-            }
-
-            if (!response.ok) {
-              const body = await response.text().catch(() => "");
-              throw new Error(`TfL API error ${response.status}: ${response.statusText}. ${body}`);
-            }
-
-            return response.json() as Promise<T>;
-          },
-          catch: (e) => {
-            if (e instanceof DisambiguationSentinel) {
-              return new TflDisambiguationError({ result: e.result });
-            }
-            return new TflError({
-              message: e instanceof Error ? e.message : `TfL request failed: ${path}`,
-              cause: e,
-            });
-          },
+          return yield* Effect.tryPromise({
+            try: () => response.json() as Promise<T>,
+            catch: (e) =>
+              new TflError({
+                message: e instanceof Error ? e.message : `TfL JSON parse failed: ${path}`,
+                cause: e,
+              }),
+          });
         }),
     };
   }),
