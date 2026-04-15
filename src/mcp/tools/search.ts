@@ -5,6 +5,30 @@ import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
 import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
+type SearchMatch = {
+  id?: string;
+  url?: string;
+  name?: string;
+  lat?: number;
+  lon?: number;
+  zone?: string;
+  modes?: string[];
+};
+
+type SearchResponse = {
+  query?: string;
+  total?: number;
+  matches?: SearchMatch[];
+};
+
+const formatMatch = (m: SearchMatch): string => {
+  const parts = [m.name ?? m.id ?? "?"];
+  if (m.modes?.length) parts.push(`modes: ${m.modes.join(", ")}`);
+  if (m.zone) parts.push(`zone: ${m.zone}`);
+  if (m.url) parts.push(m.url);
+  return parts.join(" — ");
+};
+
 export const registerSearchTools = (
   server: McpServer,
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
@@ -29,8 +53,11 @@ export const registerSearchTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/Search", { query });
-          return `Search results for "${query}":\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<SearchResponse>("/Search", { query });
+          const matches = data.matches ?? [];
+          if (!matches.length) return `No results found for "${query}".`;
+          const header = `Search results for "${query}" (${matches.length} of ${data.total ?? "?"}):`;
+          return `${header}\n\n${matches.map(formatMatch).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -55,10 +82,11 @@ export const registerSearchTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/Search/BusSchedules", {
-            query,
-          });
-          return `Bus schedule search results for "${query}":\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<SearchResponse>("/Search/BusSchedules", { query });
+          const matches = data.matches ?? [];
+          if (!matches.length) return `No bus schedule documents found for "${query}".`;
+          const header = `Bus schedule results for "${query}" (${matches.length} of ${data.total ?? "?"}):`;
+          return `${header}\n\n${matches.map(formatMatch).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -81,8 +109,8 @@ export const registerSearchTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/Search/Meta/Categories");
-          return `Search categories:\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<string[]>("/Search/Meta/Categories");
+          return `Search categories (${data.length}):\n\n${data.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -105,8 +133,8 @@ export const registerSearchTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/Search/Meta/SearchProviders");
-          return `Search providers:\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<string[]>("/Search/Meta/SearchProviders");
+          return `Search providers (${data.length}):\n\n${data.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -129,8 +157,8 @@ export const registerSearchTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/Search/Meta/Sorts");
-          return `Search sort options:\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<string[]>("/Search/Meta/Sorts");
+          return `Search sort options (${data.length}):\n\n${data.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
