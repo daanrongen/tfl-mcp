@@ -5,6 +5,34 @@ import type { TflDisambiguationError, TflError } from "../../domain/errors.ts";
 import { TflClient } from "../../domain/TflClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
+type CabwiseOperator = {
+  OperatorId?: number;
+  TradingName?: string;
+  OrganisationName?: string;
+  CentreId?: number;
+  BookingsPhoneNumber?: string;
+  BookingsEmail?: string;
+  PublicAccess?: string;
+  OperatorType?: string;
+  WheelchairAccessible?: string;
+};
+
+type CabwiseResponse = {
+  Operators?: {
+    OperatorList?: CabwiseOperator[];
+  };
+};
+
+const formatOperator = (op: CabwiseOperator): string => {
+  const name = op.TradingName ?? op.OrganisationName ?? "Unknown";
+  const type = op.OperatorType ?? "?";
+  const phone = op.BookingsPhoneNumber ? `Tel: ${op.BookingsPhoneNumber}` : null;
+  const email = op.BookingsEmail ? `Email: ${op.BookingsEmail}` : null;
+  const wheelchair = op.WheelchairAccessible === "Yes" ? " [wheelchair accessible]" : "";
+  const contact = [phone, email].filter(Boolean).join(", ") || "no contact details";
+  return `${name} (${type})${wheelchair} — ${contact}`;
+};
+
 export const registerCabwiseTools = (
   server: McpServer,
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
@@ -52,7 +80,7 @@ export const registerCabwiseTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/Cabwise/search", {
+          const data = yield* client.request<CabwiseResponse>("/Cabwise/search", {
             lat,
             lon,
             radius,
@@ -62,7 +90,11 @@ export const registerCabwiseTools = (
             twentyFourSevenOnly,
             wc,
           });
-          return `Taxi/minicab operators near (${lat}, ${lon}):\n\n${JSON.stringify(data, null, 2)}`;
+          const operators = data.Operators?.OperatorList ?? [];
+          if (!operators.length)
+            return `No licensed taxi/minicab operators found near (${lat}, ${lon}).`;
+          const lines = operators.map(formatOperator);
+          return `Taxi/minicab operators near (${lat}, ${lon}) (${operators.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);

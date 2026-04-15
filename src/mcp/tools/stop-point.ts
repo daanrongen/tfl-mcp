@@ -98,8 +98,14 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/StopPoint/Meta/Categories");
-          return `StopPoint categories:\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<
+            Array<{ category?: string; availableKeys?: string[] }>
+          >("/StopPoint/Meta/Categories");
+          const lines = data.map((c) => {
+            const keys = c.availableKeys?.join(", ") ?? "none";
+            return `${c.category ?? "?"}: ${keys}`;
+          });
+          return `StopPoint categories (${data.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -395,12 +401,14 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>("/StopPoint/ServiceTypes", {
-            id,
-            lineIds,
-            modes,
-          });
-          return `Service types at stop ${id}:\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<
+            Array<{ lineName?: string; lineId?: string; serviceType?: { name?: string } }>
+          >("/StopPoint/ServiceTypes", { id, lineIds, modes });
+          if (!data.length) return `No service types found for stop ${id}.`;
+          const lines = data.map(
+            (s) => `${s.lineName ?? s.lineId ?? "?"} — ${s.serviceType?.name ?? "?"}`,
+          );
+          return `Service types at stop ${id}:\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -464,12 +472,27 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown[]>(
-            `/StopPoint/${encodeURIComponent(id)}/ArrivalDepartures`,
-            { lineIds },
-          );
+          const data = yield* client.request<
+            Array<{
+              stationName?: string;
+              lineName?: string;
+              platformName?: string;
+              destinationName?: string;
+              scheduledTimeOfArrival?: string;
+              scheduledTimeOfDeparture?: string;
+              estimatedTimeOfArrival?: string;
+              estimatedTimeOfDeparture?: string;
+            }>
+          >(`/StopPoint/${encodeURIComponent(id)}/ArrivalDepartures`, { lineIds });
           if (!data.length) return `No arrivals/departures at stop ${id}.`;
-          return `Arrival/Departures at ${id}:\n\n${JSON.stringify(data, null, 2)}`;
+          const lines = data.map((d) => {
+            const dest = d.destinationName ?? "?";
+            const platform = d.platformName ? ` (${d.platformName})` : "";
+            const arr = d.estimatedTimeOfArrival ?? d.scheduledTimeOfArrival ?? "?";
+            const dep = d.estimatedTimeOfDeparture ?? d.scheduledTimeOfDeparture ?? "?";
+            return `  ${d.lineName ?? "?"} → ${dest}${platform} — arr: ${arr} dep: ${dep}`;
+          });
+          return `Arrival/Departures at ${data[0]?.stationName ?? id}:\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -504,15 +527,37 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/StopPoint/${encodeURIComponent(ids)}/Disruption`,
-            {
-              getFamily,
-              includeRouteBlockedStops,
-              flattenResponse,
-            },
-          );
-          return `Disruptions at ${ids}:\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<
+            Array<{
+              category?: string;
+              type?: string;
+              categoryDescription?: string;
+              description?: string;
+              summary?: string;
+              additionalInfo?: string;
+              affectedRoutes?: Array<{ name?: string }>;
+              affectedStops?: Array<{ commonName?: string }>;
+            }>
+          >(`/StopPoint/${encodeURIComponent(ids)}/Disruption`, {
+            getFamily,
+            includeRouteBlockedStops,
+            flattenResponse,
+          });
+          if (!data.length) return `No disruptions at stop(s) ${ids}.`;
+          const lines = data.map((d) => {
+            const parts = [
+              `Category: ${d.categoryDescription ?? d.category ?? "?"}`,
+              `Type: ${d.type ?? "?"}`,
+            ];
+            if (d.description) parts.push(`Info: ${d.description}`);
+            else if (d.summary) parts.push(`Info: ${d.summary}`);
+            if (d.affectedStops?.length)
+              parts.push(
+                `Affected stops: ${d.affectedStops.map((s) => s.commonName ?? "?").join(", ")}`,
+              );
+            return parts.join("\n");
+          });
+          return `Disruptions at ${ids} (${data.length}):\n\n${lines.join("\n---\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -646,11 +691,22 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/StopPoint/${encodeURIComponent(id)}/Route`,
-            { serviceTypes },
+          const data = yield* client.request<
+            Array<{
+              lineId?: string;
+              lineName?: string;
+              direction?: string;
+              originationName?: string;
+              destinationName?: string;
+              serviceType?: string;
+            }>
+          >(`/StopPoint/${encodeURIComponent(id)}/Route`, { serviceTypes });
+          if (!data.length) return `No route sections found for stop ${id}.`;
+          const lines = data.map(
+            (r) =>
+              `${r.lineName ?? r.lineId ?? "?"} (${r.serviceType ?? "Regular"}) ${r.direction ?? "?"}: ${r.originationName ?? "?"} → ${r.destinationName ?? "?"}`,
           );
-          return `Routes serving stop ${id}:\n\n${JSON.stringify(data, null, 2)}`;
+          return `Routes serving stop ${id} (${data.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -678,11 +734,26 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/StopPoint/${encodeURIComponent(id)}/Crowding/${encodeURIComponent(line)}`,
-            { direction },
-          );
-          return `Crowding data for ${id} on ${line} (${direction}):\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<
+            Array<{
+              naptanId?: string;
+              commonName?: string;
+              passengerFlows?: Array<{ timeSlice?: string; value?: number }>;
+              workerFlows?: Array<{ timeSlice?: string; value?: number }>;
+            }>
+          >(`/StopPoint/${encodeURIComponent(id)}/Crowding/${encodeURIComponent(line)}`, {
+            direction,
+          });
+          if (!data.length) return `No crowding data available for stop ${id} on ${line}.`;
+          const sections = data.map((stop) => {
+            const name = stop.commonName ?? stop.naptanId ?? "?";
+            if (!stop.passengerFlows?.length) return `${name}: no flow data`;
+            const peak = [...(stop.passengerFlows ?? [])].sort(
+              (a, b) => (b.value ?? 0) - (a.value ?? 0),
+            )[0];
+            return `${name}: peak at ${peak?.timeSlice ?? "?"} (${peak?.value ?? "?"} passengers)`;
+          });
+          return `Crowding data for ${id} on ${line} (${direction}):\n\n${sections.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -708,10 +779,25 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/StopPoint/${encodeURIComponent(stopPointId)}/CarParks`,
-          );
-          return `Car parks near stop ${stopPointId}:\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<
+            Array<{
+              id?: string;
+              name?: string;
+              carParkId?: string;
+              accessPoints?: Array<{ name?: string }>;
+              facilities?: Array<{ name?: string; description?: string; paymentMethods?: string }>;
+            }>
+          >(`/StopPoint/${encodeURIComponent(stopPointId)}/CarParks`);
+          if (!data.length) return `No car parks found near stop ${stopPointId}.`;
+          const lines = data.map((cp) => {
+            const id = cp.carParkId ?? cp.id ?? "?";
+            const name = cp.name ?? id;
+            const spaces =
+              cp.facilities?.map((f) => `${f.name ?? "?"}: ${f.description ?? "?"}`).join(", ") ??
+              "details unavailable";
+            return `${name} (${id}) — ${spaces}`;
+          });
+          return `Car parks near stop ${stopPointId} (${data.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -736,10 +822,21 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/StopPoint/${encodeURIComponent(stopPointId)}/TaxiRanks`,
+          const data = yield* client.request<
+            Array<{
+              id?: string;
+              commonName?: string;
+              placeType?: string;
+              lat?: number;
+              lon?: number;
+            }>
+          >(`/StopPoint/${encodeURIComponent(stopPointId)}/TaxiRanks`);
+          if (!data.length) return `No taxi ranks found near stop ${stopPointId}.`;
+          const lines = data.map(
+            (t) =>
+              `${t.commonName ?? t.id ?? "?"} (${t.placeType ?? "TaxiRank"}) — ${t.lat != null ? `${t.lat}, ${t.lon}` : "no coords"}`,
           );
-          return `Taxi ranks near stop ${stopPointId}:\n\n${JSON.stringify(data, null, 2)}`;
+          return `Taxi ranks near stop ${stopPointId} (${data.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -767,11 +864,21 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/StopPoint/${encodeURIComponent(id)}/placeTypes`,
-            { placeTypes },
+          const data = yield* client.request<
+            Array<{
+              id?: string;
+              commonName?: string;
+              placeType?: string;
+              lat?: number;
+              lon?: number;
+            }>
+          >(`/StopPoint/${encodeURIComponent(id)}/placeTypes`, { placeTypes });
+          if (!data.length) return `No places of type "${placeTypes}" found at stop ${id}.`;
+          const lines = data.map(
+            (p) =>
+              `${p.commonName ?? p.id ?? "?"} (${p.placeType ?? "?"}) — ${p.lat != null ? `${p.lat}, ${p.lon}` : "no coords"}`,
           );
-          return `Places of type "${placeTypes}" at stop ${id}:\n\n${JSON.stringify(data, null, 2)}`;
+          return `Places of type "${placeTypes}" at stop ${id} (${data.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);

@@ -175,11 +175,17 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(`/Line/Search/${encodeURIComponent(query)}`, {
-            modes,
-            serviceTypes,
-          });
-          return `Line search results for "${query}":\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<{
+            input?: string;
+            searchMatches?: Array<{ lineId?: string; lineName?: string; modeName?: string }>;
+          }>(`/Line/Search/${encodeURIComponent(query)}`, { modes, serviceTypes });
+          const matches = data.searchMatches ?? [];
+          if (!matches.length) return `No lines found matching "${query}".`;
+          const lines = matches.map(
+            (m) =>
+              `${m.lineName ?? m.lineId ?? "?"} (${m.modeName ?? "?"}) — ID: ${m.lineId ?? "?"}`,
+          );
+          return `Line search results for "${query}" (${matches.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -454,10 +460,30 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(`/Line/${encodeURIComponent(ids)}/Route`, {
-            serviceTypes,
-          });
-          return `Routes for ${ids}:\n\n${JSON.stringify(data, null, 2)}`;
+          type RouteSection = {
+            name?: string;
+            direction?: string;
+            originator?: string;
+            originationName?: string;
+            destination?: string;
+            destinationName?: string;
+            serviceType?: string;
+          };
+          type LineWithRoutes = Line & { routeSections?: RouteSection[] };
+          const data = yield* client.request<LineWithRoutes[]>(
+            `/Line/${encodeURIComponent(ids)}/Route`,
+            { serviceTypes },
+          );
+          if (!data.length) return `No routes found for lines: ${ids}`;
+          const sections = data.flatMap((line) =>
+            (line.routeSections ?? []).map(
+              (r) =>
+                `${line.name ?? line.id ?? "?"} (${r.serviceType ?? "Regular"}) ${r.direction ?? "?"}: ${r.originationName ?? r.originator ?? "?"} → ${r.destinationName ?? r.destination ?? "?"}`,
+            ),
+          );
+          return sections.length
+            ? `Routes for ${ids} (${sections.length} sections):\n\n${sections.join("\n")}`
+            : `Lines found but no route sections for: ${ids}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -488,11 +514,30 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<unknown>(
-            `/Line/${encodeURIComponent(id)}/Route/Sequence/${direction}`,
-            { serviceTypes, excludeCrowding },
-          );
-          return `Stop sequence for ${id} (${direction}):\n\n${JSON.stringify(data, null, 2)}`;
+          const data = yield* client.request<{
+            lineId?: string;
+            lineName?: string;
+            direction?: string;
+            stopPointSequences?: Array<{
+              direction?: string;
+              branchId?: number;
+              nextBranchIds?: number[];
+              prevBranchIds?: number[];
+              stopPoint?: Array<{ id?: string; name?: string; stopLetter?: string }>;
+            }>;
+            orderedLineRoutes?: Array<{ name?: string; naptanIds?: string[] }>;
+          }>(`/Line/${encodeURIComponent(id)}/Route/Sequence/${direction}`, {
+            serviceTypes,
+            excludeCrowding,
+          });
+          const sequences = data.stopPointSequences ?? [];
+          if (!sequences.length)
+            return `No stop sequence found for ${data.lineName ?? id} (${direction}).`;
+          const sections = sequences.map((seq, i) => {
+            const stops = (seq.stopPoint ?? []).map((s) => s.name ?? s.id ?? "?").join(" → ");
+            return `Branch ${seq.branchId ?? i + 1} (${seq.direction ?? direction}): ${stops}`;
+          });
+          return `Stop sequence for ${data.lineName ?? id} (${direction}):\n\n${sections.join("\n\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -522,7 +567,11 @@ export const registerLineTools = (
             `/Line/Mode/${encodeURIComponent(modes)}/Route`,
             { serviceTypes },
           );
-          return `Routes for mode(s) "${modes}" (${data.length} lines):\n\n${JSON.stringify(data, null, 2)}`;
+          if (!data.length) return `No routes found for mode(s): ${modes}`;
+          const lines = data.map(
+            (l) => `${l.name ?? l.id ?? "?"} (${l.modeName ?? "?"}) — ID: ${l.id ?? "?"}`,
+          );
+          return `Routes for mode(s) "${modes}" (${data.length} lines):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
