@@ -1,6 +1,6 @@
 import type { Cause } from "effect";
 import { Cause as CauseModule } from "effect";
-import type { DisambiguationResult } from "../domain/errors.ts";
+import type { DisambiguationResult } from "../domain/models.ts";
 
 export const formatSuccess = (data: unknown) => ({
   content: [
