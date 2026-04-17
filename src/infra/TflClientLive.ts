@@ -1,6 +1,7 @@
 import { Effect, Layer, Option } from "effect";
 import { TflApiKeyConfig } from "../config.ts";
-import { type DisambiguationResult, TflDisambiguationError, TflError } from "../domain/errors.ts";
+import { TflDisambiguationError, TflError } from "../domain/errors.ts";
+import type { DisambiguationResult } from "../domain/models.ts";
 import { TflClient } from "../domain/TflClient.ts";
 
 const TFL_API_BASE = "https://api.tfl.gov.uk";
