@@ -53,6 +53,62 @@ export const registerRoadTools = (
   server: McpServer,
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
+  // --- Meta ---
+  server.tool(
+    "road_meta_categories",
+    "Gets the list of valid road disruption category names.",
+    {},
+    {
+      title: "Road Disruption Categories",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+    async () => {
+      const result = await runtime.runPromiseExit(
+        Effect.gen(function* () {
+          const client = yield* TflClient;
+          const data = yield* client.request<string[]>("/Road/Meta/Categories");
+          return `Road disruption categories:\n\n${data.join("\n")}`;
+        }),
+      );
+      if (result._tag === "Failure") return formatError(result.cause);
+      return formatSuccess(result.value);
+    },
+  );
+
+  server.tool(
+    "road_meta_severities",
+    "Gets the list of valid road disruption severity levels.",
+    {},
+    {
+      title: "Road Disruption Severities",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+    async () => {
+      const result = await runtime.runPromiseExit(
+        Effect.gen(function* () {
+          const client = yield* TflClient;
+          const data =
+            yield* client.request<
+              Array<{ description?: string; levelOfInterest?: string; ordinal?: number }>
+            >("/Road/Meta/Severities");
+          const rows = data.map(
+            (s) =>
+              `${s.description ?? "?"} (level: ${s.levelOfInterest ?? "?"}, ordinal: ${s.ordinal ?? "?"})`,
+          );
+          return `Road disruption severities:\n\n${rows.join("\n")}`;
+        }),
+      );
+      if (result._tag === "Failure") return formatError(result.cause);
+      return formatSuccess(result.value);
+    },
+  );
+
   server.tool(
     "road_all",
     "Gets status for all roads on the TfL Road Network (TLRN).",

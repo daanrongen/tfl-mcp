@@ -11,6 +11,7 @@ type StopPoint = {
   naptanId?: string;
   icsCode?: string;
   commonName?: string;
+  name?: string;
   stopType?: string;
   lat?: number;
   lon?: number;
@@ -23,7 +24,7 @@ const stopId = (s: StopPoint): string => s.icsCode ?? s.naptanId ?? s.id ?? "?";
 const formatStop = (s: StopPoint): string => {
   const modes = s.modes?.join(", ") ?? "?";
   const lines = s.lines?.map((l) => l.name ?? l.id).join(", ") ?? "";
-  return `${s.commonName ?? "??"} — ID: ${stopId(s)} — ${s.stopType ?? "?"} — modes: ${modes}${lines ? ` — lines: ${lines}` : ""}`;
+  return `${s.commonName ?? s.name ?? "??"} — ID: ${stopId(s)} — ${s.stopType ?? "?"} — modes: ${modes}${lines ? ` — lines: ${lines}` : ""}`;
 };
 
 export const registerStopPointTools = (
