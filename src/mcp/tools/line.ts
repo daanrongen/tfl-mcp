@@ -367,11 +367,15 @@ export const registerLineTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
+          const toIso = (d: string): string =>
+            d.length === 8 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : d;
+          const start = toIso(startDate);
+          const end = toIso(endDate);
           const data = yield* client.request<Line[]>(
-            `/Line/${encodeURIComponent(ids)}/Status/${encodeURIComponent(startDate)}/to/${encodeURIComponent(endDate)}`,
+            `/Line/${encodeURIComponent(ids)}/Status/${encodeURIComponent(start)}/to/${encodeURIComponent(end)}`,
             { detail },
           );
-          return `Status for ${ids} between ${startDate} and ${endDate}:\n\n${data.map(formatLine).join("\n")}`;
+          return `Status for ${ids} between ${start} and ${end}:\n\n${data.map(formatLine).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
