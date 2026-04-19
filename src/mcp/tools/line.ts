@@ -319,7 +319,7 @@ export const registerLineTools = (
     "line_status_by_severity",
     "Gets all lines currently at a given severity level. Use line_meta_severity to get severity codes.",
     {
-      severity: z
+      severity: z.coerce
         .number()
         .int()
         .describe(

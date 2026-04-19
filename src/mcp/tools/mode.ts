@@ -46,7 +46,7 @@ export const registerModeTools = (
         .describe(
           "Transport mode (e.g. 'tube', 'bus', 'dlr', 'overground', 'elizabeth-line', 'tram')",
         ),
-      count: z
+      count: z.coerce
         .number()
         .int()
         .positive()

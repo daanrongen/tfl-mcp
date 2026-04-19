@@ -42,7 +42,7 @@ export const registerAccidentTools = (
     "accident_stats",
     "Gets all accident details for accidents occurring in the specified year in London.",
     {
-      year: z
+      year: z.coerce
         .number()
         .int()
         .min(2005)
