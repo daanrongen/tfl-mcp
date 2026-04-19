@@ -147,8 +147,8 @@ export const registerPlaceTools = (
         Effect.gen(function* () {
           const client = yield* TflClient;
           const data =
-            yield* client.request<Array<{ placeName?: string }>>("/Place/Meta/PlaceTypes");
-          return `Place types:\n\n${data.map((t) => t.placeName ?? "?").join("\n")}`;
+            yield* client.request<Array<{ category?: string }>>("/Place/Meta/PlaceTypes");
+          return `Place types:\n\n${data.map((t) => t.category ?? "?").join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);

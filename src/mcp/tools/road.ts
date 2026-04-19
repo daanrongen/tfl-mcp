@@ -95,11 +95,11 @@ export const registerRoadTools = (
           const client = yield* TflClient;
           const data =
             yield* client.request<
-              Array<{ description?: string; levelOfInterest?: string; ordinal?: number }>
+              Array<{ description?: string; severityLevel?: number; modeName?: string }>
             >("/Road/Meta/Severities");
           const rows = data.map(
             (s) =>
-              `${s.description ?? "?"} (level: ${s.levelOfInterest ?? "?"}, ordinal: ${s.ordinal ?? "?"})`,
+              `${s.description ?? "?"} (severityLevel: ${s.severityLevel ?? "?"}, mode: ${s.modeName ?? "?"})`,
           );
           return `Road disruption severities:\n\n${rows.join("\n")}`;
         }),
