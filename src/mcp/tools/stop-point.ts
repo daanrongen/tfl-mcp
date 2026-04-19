@@ -201,9 +201,11 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<StopPoint[]>(`/StopPoint/${encodeURIComponent(ids)}`, {
-            includeCrowdingData,
-          });
+          const raw = yield* client.request<StopPoint | StopPoint[]>(
+            `/StopPoint/${encodeURIComponent(ids)}`,
+            { includeCrowdingData },
+          );
+          const data = Array.isArray(raw) ? raw : [raw];
           return `Stop point details:\n\n${data.map(formatStop).join("\n")}`;
         }),
       );
@@ -336,10 +338,11 @@ export const registerStopPointTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<StopPoint[]>(
+          const raw = yield* client.request<StopPoint | StopPoint[]>(
             `/StopPoint/Mode/${encodeURIComponent(modes)}`,
             { page },
           );
+          const data = Array.isArray(raw) ? raw : [raw];
           return `Stop points for mode(s) "${modes}" (page ${page ?? 1}, ${data.length} results):\n\n${data.map(formatStop).join("\n")}`;
         }),
       );
