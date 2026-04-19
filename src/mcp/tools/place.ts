@@ -146,8 +146,9 @@ export const registerPlaceTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Array<{ type?: string }>>("/Place/Meta/PlaceTypes");
-          return `Place types:\n\n${data.map((t) => t.type ?? "?").join("\n")}`;
+          const data =
+            yield* client.request<Array<{ placeName?: string }>>("/Place/Meta/PlaceTypes");
+          return `Place types:\n\n${data.map((t) => t.placeName ?? "?").join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);

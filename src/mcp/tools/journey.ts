@@ -195,10 +195,10 @@ export const registerJourneyTools = (
         Effect.gen(function* () {
           const client = yield* TflClient;
           const data =
-            yield* client.request<Array<{ mode?: string; isTflService?: boolean }>>(
+            yield* client.request<Array<{ modeName?: string; isTflService?: boolean }>>(
               "/Journey/Meta/Modes",
             );
-          const modes = data.map((m) => `${m.mode ?? "??"} (TfL: ${m.isTflService ?? false})`);
+          const modes = data.map((m) => `${m.modeName ?? "??"} (TfL: ${m.isTflService ?? false})`);
           return `Available journey modes:\n\n${modes.join("\n")}`;
         }),
       );
