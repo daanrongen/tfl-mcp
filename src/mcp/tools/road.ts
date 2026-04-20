@@ -53,77 +53,30 @@ export const registerRoadTools = (
   server: McpServer,
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
-  // --- Meta ---
   server.tool(
-    "road_meta_categories",
-    "Gets the list of valid road disruption category names.",
-    {},
+    "road_lookup",
+    "Gets status for roads on the TfL Road Network (TLRN). Omit ids to get all roads.",
     {
-      title: "Road Disruption Categories",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
+      ids: z
+        .string()
+        .optional()
+        .describe("Comma-separated road IDs (e.g. 'A1,A2'). Omit to get all roads on the TLRN."),
     },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<string[]>("/Road/Meta/Categories");
-          return `Road disruption categories:\n\n${data.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "road_meta_severities",
-    "Gets the list of valid road disruption severity levels.",
-    {},
     {
-      title: "Road Disruption Severities",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data =
-            yield* client.request<
-              Array<{ description?: string; severityLevel?: number; modeName?: string }>
-            >("/Road/Meta/Severities");
-          const rows = data.map(
-            (s) =>
-              `${s.description ?? "?"} (severityLevel: ${s.severityLevel ?? "?"}, mode: ${s.modeName ?? "?"})`,
-          );
-          return `Road disruption severities:\n\n${rows.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "road_all",
-    "Gets status for all roads on the TfL Road Network (TLRN).",
-    {},
-    {
-      title: "All Roads Status",
+      title: "Road Lookup",
       readOnlyHint: true,
       destructiveHint: false,
       idempotentHint: false,
       openWorldHint: true,
     },
-    async () => {
+    async ({ ids }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
+          if (ids) {
+            const data = yield* client.request<Road[]>(`/Road/${encodeURIComponent(ids)}`);
+            return `Road status:\n\n${data.map(formatRoad).join("\n\n")}`;
+          }
           const data = yield* client.request<Road[]>("/Road");
           return `Road network status (${data.length} roads):\n\n${data.map(formatRoad).join("\n\n")}`;
         }),
@@ -134,40 +87,13 @@ export const registerRoadTools = (
   );
 
   server.tool(
-    "road_by_ids",
-    "Gets status for specific roads on the TLRN by their IDs.",
+    "road_disruptions",
+    "Gets active disruptions on specific TLRN roads, or all disruptions across the entire network. Valid disruption categories: roadworks, incidents, streetworks, plannedworks, events, trafficflow.",
     {
       ids: z
         .string()
-        .describe(
-          "Comma-separated road IDs (e.g. 'A1,A2'). Use road_all to discover available IDs.",
-        ),
-    },
-    {
-      title: "Road Status by ID",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-    async ({ ids }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Road[]>(`/Road/${encodeURIComponent(ids)}`);
-          return `Road status:\n\n${data.map(formatRoad).join("\n\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "road_disruptions",
-    "Gets active disruptions on specific TLRN roads.",
-    {
-      ids: z.string().describe("Comma-separated road IDs (e.g. 'A1,A2')"),
+        .optional()
+        .describe("Comma-separated road IDs (e.g. 'A1,A2'). Omit to get all TLRN disruptions."),
       stripContent: z
         .boolean()
         .optional()
@@ -176,7 +102,10 @@ export const registerRoadTools = (
         .string()
         .optional()
         .describe("Comma-separated severity filter (e.g. 'Serious,Severe')"),
-      categories: z.string().optional().describe("Comma-separated category filter"),
+      categories: z
+        .string()
+        .optional()
+        .describe("Comma-separated category filter (e.g. 'roadworks,incidents')"),
       closures: z.boolean().optional().describe("If true, only return closures"),
     },
     {
@@ -190,45 +119,14 @@ export const registerRoadTools = (
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<RoadDisruption[]>(
-            `/Road/${encodeURIComponent(ids)}/Disruption`,
-            { stripContent, severities, categories, closures },
-          );
-          if (!data.length) return `No active disruptions for roads: ${ids}`;
-          return `Disruptions on ${ids}:\n\n${data.map(formatDisruption).join("\n---\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "road_disruptions_all",
-    "Gets all active road disruptions across the entire TLRN.",
-    {
-      stripContent: z
-        .boolean()
-        .optional()
-        .describe("If true, strip HTML from disruption descriptions"),
-      severities: z
-        .string()
-        .optional()
-        .describe("Comma-separated severity filter (e.g. 'Serious,Severe')"),
-      categories: z.string().optional().describe("Comma-separated category filter"),
-      closures: z.boolean().optional().describe("If true, only return closures"),
-    },
-    {
-      title: "All Road Disruptions",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-    async ({ stripContent, severities, categories, closures }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
+          if (ids) {
+            const data = yield* client.request<RoadDisruption[]>(
+              `/Road/${encodeURIComponent(ids)}/Disruption`,
+              { stripContent, severities, categories, closures },
+            );
+            if (!data.length) return `No active disruptions for roads: ${ids}`;
+            return `Disruptions on ${ids}:\n\n${data.map(formatDisruption).join("\n---\n")}`;
+          }
           const data = yield* client.request<RoadDisruption[]>("/Road/all/Disruption", {
             stripContent,
             severities,

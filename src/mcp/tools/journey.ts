@@ -51,7 +51,7 @@ export const registerJourneyTools = (
 ) => {
   server.tool(
     "journey_plan",
-    "Plan a journey across London's transport network. Supports tube, bus, overground, Elizabeth line, DLR, cycling and walking. Returns journey options with duration, modes, and step-by-step legs.",
+    "Plan a journey across London's transport network. Valid modes: tube, bus, dlr, overground, elizabeth-line, national-rail, tflrail, tram, cable-car, walking, cycle. Returns journey options with duration, modes, and step-by-step legs.",
     {
       from: z
         .string()
@@ -173,34 +173,6 @@ export const registerJourneyTools = (
             Effect.succeed(formatDisambiguation(e.result)),
           ),
         ),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "journey_modes",
-    "Gets all available transport modes supported by the TfL journey planner (e.g. tube, bus, dlr, overground, elizabeth-line, cycling, walking).",
-    {},
-    {
-      title: "Journey Modes",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data =
-            yield* client.request<Array<{ modeName?: string; isTflService?: boolean }>>(
-              "/Journey/Meta/Modes",
-            );
-          const modes = data.map((m) => `${m.modeName ?? "??"} (TfL: ${m.isTflService ?? false})`);
-          return `Available journey modes:\n\n${modes.join("\n")}`;
-        }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
       return formatSuccess(result.value);

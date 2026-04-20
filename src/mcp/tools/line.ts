@@ -38,114 +38,6 @@ export const registerLineTools = (
   server: McpServer,
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
-  // --- Meta ---
-  server.tool(
-    "line_meta_modes",
-    "Gets all valid line modes (e.g. tube, bus, dlr, overground, elizabeth-line, tram, cable-car).",
-    {},
-    {
-      title: "Line Meta Modes",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Array<{ modeName?: string }>>("/Line/Meta/Modes");
-          return `Available line modes: ${data.map((m) => m.modeName ?? "??").join(", ")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_meta_severity",
-    "Gets all valid severity codes and their descriptions used in line status.",
-    {},
-    {
-      title: "Line Severity Codes",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data =
-            yield* client.request<
-              Array<{
-                modeName?: string;
-                severityLevel?: number;
-                description?: string;
-              }>
-            >("/Line/Meta/Severity");
-          const rows = data.map(
-            (s) =>
-              `Level ${s.severityLevel ?? "?"} (${s.modeName ?? "?"}): ${s.description ?? "?"}`,
-          );
-          return `Severity codes:\n\n${rows.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_meta_disruption_categories",
-    "Gets all valid disruption category names used by TfL lines.",
-    {},
-    {
-      title: "Disruption Categories",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<string[]>("/Line/Meta/DisruptionCategories");
-          return `Disruption categories:\n${data.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_meta_service_types",
-    "Gets all valid service types for TfL lines (e.g. Regular, Night).",
-    {},
-    {
-      title: "Line Service Types",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<string[]>("/Line/Meta/ServiceTypes");
-          return `Service types: ${data.join(", ")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
   // --- Line lookup ---
   server.tool(
     "line_search",
@@ -194,56 +86,37 @@ export const registerLineTools = (
   );
 
   server.tool(
-    "line_by_ids",
-    "Gets details for one or more specific TfL lines by their IDs (e.g. 'victoria', 'central', '25').",
+    "line_lookup",
+    "Gets details for one or more TfL lines by their IDs, or all lines for a given mode. Valid modes: tube, bus, dlr, overground, elizabeth-line, national-rail, tflrail, tram, cable-car.",
     {
       ids: z
         .string()
+        .optional()
         .describe("Comma-separated line IDs (e.g. 'victoria,central,jubilee' or '25,73')"),
-    },
-    {
-      title: "Lines by IDs",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ ids }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(`/Line/${encodeURIComponent(ids)}`);
-          return data.map(formatLine).join("\n");
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_by_mode",
-    "Gets all lines serving a given transport mode (e.g. all tube lines, all bus lines).",
-    {
       modes: z
         .string()
+        .optional()
         .describe(
-          "Comma-separated transport modes (e.g. 'tube', 'bus', 'dlr', 'overground', 'elizabeth-line')",
+          "Comma-separated transport modes (e.g. 'tube', 'bus', 'dlr'). Use instead of ids to get all lines for a mode.",
         ),
     },
     {
-      title: "Lines by Mode",
+      title: "Line Lookup",
       readOnlyHint: true,
       destructiveHint: false,
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ modes }) => {
+    async ({ ids, modes }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(`/Line/Mode/${encodeURIComponent(modes)}`);
-          return `Lines for mode(s) "${modes}" (${data.length} total):\n\n${data.map(formatLine).join("\n")}`;
+          if (modes) {
+            const data = yield* client.request<Line[]>(`/Line/Mode/${encodeURIComponent(modes)}`);
+            return `Lines for mode(s) "${modes}" (${data.length} total):\n\n${data.map(formatLine).join("\n")}`;
+          }
+          const data = yield* client.request<Line[]>(`/Line/${encodeURIComponent(ids ?? "")}`);
+          return data.map(formatLine).join("\n");
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -254,12 +127,36 @@ export const registerLineTools = (
   // --- Status ---
   server.tool(
     "line_status",
-    "Gets current service status for one or more specific lines (e.g. 'Good Service', 'Minor Delays', 'Severe Delays', 'Suspended').",
+    "Gets current service status for TfL lines. Can query by line IDs, mode, severity level, or date range. Severity codes: 10=Good Service, 9=Reduced Service, 6=Severe Delays, 5=Part Closure, 4=Planned Closure, 2=Suspended, 0=Special Service. Service types: Regular, Night.",
     {
       ids: z
         .string()
-        .describe("Comma-separated line IDs to check (e.g. 'victoria,jubilee,central')"),
-      detail: z.boolean().optional().describe("If true, include detailed disruption information"),
+        .optional()
+        .describe(
+          "Comma-separated line IDs (e.g. 'victoria,jubilee'). Modes: tube, bus, dlr, overground, elizabeth-line",
+        ),
+      modes: z
+        .string()
+        .optional()
+        .describe(
+          "Comma-separated modes (e.g. 'tube,dlr'). Use instead of ids to get all lines for a mode.",
+        ),
+      severity: z.coerce
+        .number()
+        .int()
+        .optional()
+        .describe(
+          "Severity code: 10=Good Service, 9=Reduced Service, 6=Severe Delays, 5=Part Closure, 4=Planned Closure, 2=Suspended, 0=Special Service",
+        ),
+      startDate: z
+        .string()
+        .optional()
+        .describe("Start of date range, ISO 8601 (e.g. '2024-03-01T00:00:00'). Requires ids."),
+      endDate: z
+        .string()
+        .optional()
+        .describe("End of date range, ISO 8601 (e.g. '2024-03-07T23:59:59'). Requires ids."),
+      detail: z.boolean().optional().describe("Include detailed disruption info"),
     },
     {
       title: "Line Status",
@@ -268,114 +165,38 @@ export const registerLineTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ ids, detail }) => {
+    async ({ ids, modes, severity, startDate, endDate, detail }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(`/Line/${encodeURIComponent(ids)}/Status`, {
-            detail,
-          });
+          if (severity !== undefined) {
+            const data = yield* client.request<Line[]>(`/Line/Status/${severity}`);
+            if (!data.length) return `No lines at severity level ${severity}.`;
+            return `Lines at severity ${severity}:\n\n${data.map(formatLine).join("\n")}`;
+          }
+          if (ids && startDate && endDate) {
+            const toIso = (d: string): string =>
+              d.length === 8 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : d;
+            const start = toIso(startDate);
+            const end = toIso(endDate);
+            const data = yield* client.request<Line[]>(
+              `/Line/${encodeURIComponent(ids)}/Status/${encodeURIComponent(start)}/to/${encodeURIComponent(end)}`,
+              { detail },
+            );
+            return `Status for ${ids} between ${start} and ${end}:\n\n${data.map(formatLine).join("\n")}`;
+          }
+          if (modes) {
+            const data = yield* client.request<Line[]>(
+              `/Line/Mode/${encodeURIComponent(modes)}/Status`,
+              { detail },
+            );
+            return `Status for ${modes} lines:\n\n${data.map(formatLine).join("\n")}`;
+          }
+          const data = yield* client.request<Line[]>(
+            `/Line/${encodeURIComponent(ids ?? "")}/Status`,
+            { detail },
+          );
           return `Current line status:\n\n${data.map(formatLine).join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_status_by_mode",
-    "Gets current service status for all lines of a given mode (e.g. all tube lines, all DLR lines).",
-    {
-      modes: z
-        .string()
-        .describe("Comma-separated modes (e.g. 'tube', 'dlr', 'overground', 'elizabeth-line')"),
-      detail: z.boolean().optional().describe("If true, include detailed disruption reasons"),
-    },
-    {
-      title: "Line Status by Mode",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-    async ({ modes, detail }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(
-            `/Line/Mode/${encodeURIComponent(modes)}/Status`,
-            { detail },
-          );
-          return `Status for ${modes} lines:\n\n${data.map(formatLine).join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_status_by_severity",
-    "Gets all lines currently at a given severity level. Use line_meta_severity to get severity codes.",
-    {
-      severity: z.coerce
-        .number()
-        .int()
-        .describe(
-          "Severity level integer code. Use line_meta_severity to look up available codes.",
-        ),
-    },
-    {
-      title: "Line Status by Severity",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-    async ({ severity }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(`/Line/Status/${severity}`);
-          if (!data.length) return `No lines at severity level ${severity}.`;
-          return `Lines at severity ${severity}:\n\n${data.map(formatLine).join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_status_by_date_range",
-    "Gets service status for specific lines over a date range (useful for checking historical disruptions or planned closures).",
-    {
-      ids: z.string().describe("Comma-separated line IDs (e.g. 'victoria,jubilee')"),
-      startDate: z.string().describe("Start date in ISO 8601 format (e.g. '2024-03-01T00:00:00')"),
-      endDate: z.string().describe("End date in ISO 8601 format (e.g. '2024-03-07T23:59:59')"),
-      detail: z.boolean().optional().describe("Include detailed disruption info"),
-    },
-    {
-      title: "Line Status by Date Range",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ ids, startDate, endDate, detail }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const toIso = (d: string): string =>
-            d.length === 8 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : d;
-          const start = toIso(startDate);
-          const end = toIso(endDate);
-          const data = yield* client.request<Line[]>(
-            `/Line/${encodeURIComponent(ids)}/Status/${encodeURIComponent(start)}/to/${encodeURIComponent(end)}`,
-            { detail },
-          );
-          return `Status for ${ids} between ${start} and ${end}:\n\n${data.map(formatLine).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -386,9 +207,15 @@ export const registerLineTools = (
   // --- Disruptions ---
   server.tool(
     "line_disruptions",
-    "Gets active disruptions for specific lines.",
+    "Gets active disruptions for specific lines or all lines of a given mode.",
     {
-      ids: z.string().describe("Comma-separated line IDs (e.g. 'central,district')"),
+      ids: z.string().optional().describe("Comma-separated line IDs (e.g. 'central,district')"),
+      modes: z
+        .string()
+        .optional()
+        .describe(
+          "Comma-separated modes (e.g. 'tube', 'bus', 'overground'). Use instead of ids to get disruptions for all lines of a mode.",
+        ),
     },
     {
       title: "Line Disruptions",
@@ -397,12 +224,19 @@ export const registerLineTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ ids }) => {
+    async ({ ids, modes }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
+          if (modes) {
+            const data = yield* client.request<Disruption[]>(
+              `/Line/Mode/${encodeURIComponent(modes)}/Disruption`,
+            );
+            if (!data.length) return `No active disruptions for mode(s): ${modes}`;
+            return `Disruptions for ${modes}:\n\n${data.map(formatDisruption).join("\n---\n")}`;
+          }
           const data = yield* client.request<Disruption[]>(
-            `/Line/${encodeURIComponent(ids)}/Disruption`,
+            `/Line/${encodeURIComponent(ids ?? "")}/Disruption`,
           );
           if (!data.length) return `No active disruptions for lines: ${ids}`;
           return `Disruptions for ${ids}:\n\n${data.map(formatDisruption).join("\n---\n")}`;
@@ -413,41 +247,18 @@ export const registerLineTools = (
     },
   );
 
-  server.tool(
-    "line_disruptions_by_mode",
-    "Gets all active disruptions across all lines of a given mode.",
-    {
-      modes: z.string().describe("Comma-separated modes (e.g. 'tube', 'bus', 'overground')"),
-    },
-    {
-      title: "Line Disruptions by Mode",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-    async ({ modes }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Disruption[]>(
-            `/Line/Mode/${encodeURIComponent(modes)}/Disruption`,
-          );
-          if (!data.length) return `No active disruptions for mode(s): ${modes}`;
-          return `Disruptions for ${modes}:\n\n${data.map(formatDisruption).join("\n---\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
   // --- Routes ---
   server.tool(
     "line_routes",
-    "Gets all valid routes for specific lines, including originating and terminating stop names.",
+    "Gets valid routes for specific lines, all lines of a mode, or all TfL lines. Service types: Regular, Night.",
     {
-      ids: z.string().describe("Comma-separated line IDs (e.g. 'victoria,elizabeth')"),
+      ids: z.string().optional().describe("Comma-separated line IDs (e.g. 'victoria,elizabeth')"),
+      modes: z
+        .string()
+        .optional()
+        .describe(
+          "Comma-separated modes (e.g. 'tube,overground'). Use instead of ids to get routes for all lines of a mode.",
+        ),
       serviceTypes: z
         .string()
         .optional()
@@ -460,7 +271,7 @@ export const registerLineTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ ids, serviceTypes }) => {
+    async ({ ids, modes, serviceTypes }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
@@ -474,20 +285,35 @@ export const registerLineTools = (
             serviceType?: string;
           };
           type LineWithRoutes = Line & { routeSections?: RouteSection[] };
-          const data = yield* client.request<LineWithRoutes[]>(
-            `/Line/${encodeURIComponent(ids)}/Route`,
-            { serviceTypes },
-          );
-          if (!data.length) return `No routes found for lines: ${ids}`;
-          const sections = data.flatMap((line) =>
-            (line.routeSections ?? []).map(
-              (r) =>
-                `${line.name ?? line.id ?? "?"} (${r.serviceType ?? "Regular"}) ${r.direction ?? "?"}: ${r.originationName ?? r.originator ?? "?"} → ${r.destinationName ?? r.destination ?? "?"}`,
-            ),
-          );
-          return sections.length
-            ? `Routes for ${ids} (${sections.length} sections):\n\n${sections.join("\n")}`
-            : `Lines found but no route sections for: ${ids}`;
+          if (modes) {
+            const data = yield* client.request<Line[]>(
+              `/Line/Mode/${encodeURIComponent(modes)}/Route`,
+              { serviceTypes },
+            );
+            if (!data.length) return `No routes found for mode(s): ${modes}`;
+            const lines = data.map(
+              (l) => `${l.name ?? l.id ?? "?"} (${l.modeName ?? "?"}) — ID: ${l.id ?? "?"}`,
+            );
+            return `Routes for mode(s) "${modes}" (${data.length} lines):\n\n${lines.join("\n")}`;
+          }
+          if (ids) {
+            const data = yield* client.request<LineWithRoutes[]>(
+              `/Line/${encodeURIComponent(ids)}/Route`,
+              { serviceTypes },
+            );
+            if (!data.length) return `No routes found for lines: ${ids}`;
+            const sections = data.flatMap((line) =>
+              (line.routeSections ?? []).map(
+                (r) =>
+                  `${line.name ?? line.id ?? "?"} (${r.serviceType ?? "Regular"}) ${r.direction ?? "?"}: ${r.originationName ?? r.originator ?? "?"} → ${r.destinationName ?? r.destination ?? "?"}`,
+              ),
+            );
+            return sections.length
+              ? `Routes for ${ids} (${sections.length} sections):\n\n${sections.join("\n")}`
+              : `Lines found but no route sections for: ${ids}`;
+          }
+          const data = yield* client.request<Line[]>("/Line/Route", { serviceTypes });
+          return `All TfL routes (${data.length} lines):\n\n${data.map((l) => `${l.name ?? l.id ?? "??"} (${l.modeName ?? "?"})`).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -542,71 +368,6 @@ export const registerLineTools = (
             return `Branch ${seq.branchId ?? i + 1} (${seq.direction ?? direction}): ${stops}`;
           });
           return `Stop sequence for ${data.lineName ?? id} (${direction}):\n\n${sections.join("\n\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_routes_by_mode",
-    "Gets all routes for all lines of a given mode.",
-    {
-      modes: z.string().describe("Comma-separated modes (e.g. 'tube,overground')"),
-      serviceTypes: z.string().optional().describe("Filter by service type"),
-    },
-    {
-      title: "Line Routes by Mode",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ modes, serviceTypes }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Line[]>(
-            `/Line/Mode/${encodeURIComponent(modes)}/Route`,
-            { serviceTypes },
-          );
-          if (!data.length) return `No routes found for mode(s): ${modes}`;
-          const lines = data.map(
-            (l) => `${l.name ?? l.id ?? "?"} (${l.modeName ?? "?"}) — ID: ${l.id ?? "?"}`,
-          );
-          return `Routes for mode(s) "${modes}" (${data.length} lines):\n\n${lines.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "line_all_routes",
-    "Gets all valid routes for all TfL lines.",
-    {
-      serviceTypes: z
-        .string()
-        .optional()
-        .describe("Filter by service type (e.g. 'Regular' or 'Night')"),
-    },
-    {
-      title: "All Line Routes",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ serviceTypes }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Line[]>("/Line/Route", {
-            serviceTypes,
-          });
-          return `All TfL routes (${data.length} lines):\n\n${data.map((l) => `${l.name ?? l.id ?? "??"} (${l.modeName ?? "?"})`).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
