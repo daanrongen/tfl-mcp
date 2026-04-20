@@ -99,6 +99,35 @@ describe("bike point tools data", () => {
   });
 });
 
+describe("vehicle tools data", () => {
+  it("vehicle ulez compliance returns compliance status", async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const client = yield* TflClient;
+        return yield* client.request<
+          Array<{ vrm?: string; make?: string; model?: string; compliance?: string }>
+        >("/Vehicle/UlezCompliance", { vrm: "AB12CDE" });
+      }).pipe(Effect.provide(TflClientTest)),
+    );
+    expect(result[0]?.vrm).toBe("AB12CDE");
+    expect(result[0]?.compliance).toBe("Compliant");
+  });
+
+  it("vehicle emission surcharge returns ulez and caz flags", async () => {
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const client = yield* TflClient;
+        return yield* client.request<
+          Array<{ vrm?: string; isUlezCompliant?: boolean; isCazCompliant?: boolean }>
+        >("/Vehicle/EmissionSurcharge", { vrm: "AB12CDE" });
+      }).pipe(Effect.provide(TflClientTest)),
+    );
+    expect(result[0]?.vrm).toBe("AB12CDE");
+    expect(result[0]?.isUlezCompliant).toBe(true);
+    expect(result[0]?.isCazCompliant).toBe(true);
+  });
+});
+
 describe("custom fixture handlers", () => {
   it("can provide specific line status fixture", async () => {
     const fixtures = new Map<string, unknown>([

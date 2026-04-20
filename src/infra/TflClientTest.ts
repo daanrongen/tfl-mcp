@@ -34,5 +34,34 @@ export const TflClientTest = makeTflClientTest(
     ["/StopPoint/Meta/StopTypes", ["NaptanMetroStation"]],
     ["/Search", { matches: [] }],
     ["/Occupancy/CarPark", []],
+    [
+      "/Vehicle/UlezCompliance",
+      [
+        {
+          vrm: "AB12CDE",
+          type: "Car",
+          make: "TOYOTA",
+          model: "YARIS",
+          colour: "BLUE",
+          compliance: "Compliant",
+        },
+      ],
+    ],
+    [
+      "/Vehicle/EmissionSurcharge",
+      [
+        {
+          vrm: "AB12CDE",
+          type: "Car",
+          make: "TOYOTA",
+          model: "YARIS",
+          colour: "BLUE",
+          compliant: "Compliant",
+          isCazCompliant: true,
+          isUlezCompliant: true,
+          charges: [],
+        },
+      ],
+    ],
   ]),
 );

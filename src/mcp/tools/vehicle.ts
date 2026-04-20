@@ -24,6 +24,15 @@ type VehicleCompliance = {
   message?: string;
 };
 
+type VehicleUlezCompliance = {
+  vrm?: string;
+  type?: string;
+  make?: string;
+  model?: string;
+  colour?: string;
+  compliance?: string;
+};
+
 type VehicleArrival = {
   vehicleId?: string;
   lineName?: string;
@@ -56,6 +65,15 @@ const formatCompliance = (v: VehicleCompliance): string => {
   return lines.filter(Boolean).join("\n");
 };
 
+const formatUlezCompliance = (v: VehicleUlezCompliance): string =>
+  [
+    `VRM: ${v.vrm ?? "?"}`,
+    `Make/Model: ${v.make ?? "?"} ${v.model ?? ""}`.trim(),
+    `Type: ${v.type ?? "?"}`,
+    `Colour: ${v.colour ?? "?"}`,
+    `ULEZ Compliance: ${v.compliance ?? "?"}`,
+  ].join("\n");
+
 export const registerVehicleTools = (
   server: McpServer,
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
@@ -84,6 +102,37 @@ export const registerVehicleTools = (
           });
           if (!data.length) return `No emission surcharge data found for VRM: ${vrm}`;
           return data.map((v) => formatCompliance(v)).join("\n\n");
+        }),
+      );
+      if (result._tag === "Failure") return formatError(result.cause);
+      return formatSuccess(result.value);
+    },
+  );
+
+  server.tool(
+    "vehicle_ulez_compliance",
+    "Checks ULEZ (Ultra Low Emission Zone) compliance for a vehicle by registration. Returns the vehicle details and a simple compliance status string indicating whether the vehicle must pay the ULEZ charge.",
+    {
+      vrm: z
+        .string()
+        .describe("Vehicle Registration Mark (number plate) to check (e.g. 'AB12CDE')"),
+    },
+    {
+      title: "Vehicle ULEZ Compliance",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+    async ({ vrm }) => {
+      const result = await runtime.runPromiseExit(
+        Effect.gen(function* () {
+          const client = yield* TflClient;
+          const data = yield* client.request<VehicleUlezCompliance[]>("/Vehicle/UlezCompliance", {
+            vrm,
+          });
+          if (!data.length) return `No ULEZ compliance data found for VRM: ${vrm}`;
+          return data.map((v) => formatUlezCompliance(v)).join("\n\n");
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
