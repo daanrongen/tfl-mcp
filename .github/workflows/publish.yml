@@ -1,13 +1,20 @@
 name: Publish
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      NPM_TOKEN:
+        required: true
   workflow_dispatch:
     inputs:
       tag:
         description: "Release tag to publish (e.g. v1.0.0)"
         required: true
+        type: string
 
 jobs:
   publish-npm:
@@ -23,7 +30,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Download release tarball
-        run: gh release download "${{ github.event.release.tag_name || inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.tgz" --dir .
+        run: gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.tgz" --dir .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

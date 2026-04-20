@@ -1,6 +1,6 @@
 {
   "name": "@daanrongen/tfl-mcp",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "MCP server for the Transport for London (TfL) Unified API — lines, journeys, stop points, arrivals, bike points, and more over stdio",
   "type": "module",
   "bin": {
