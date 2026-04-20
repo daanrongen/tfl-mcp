@@ -18,7 +18,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Download release tarball
-        run: gh release download "${{ github.event.release.tag_name }}" --pattern "*.tgz" --dir .
+        run: gh release download "${{ github.event.release.tag_name }}" --repo "${{ github.repository }}" --pattern "*.tgz" --dir .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
