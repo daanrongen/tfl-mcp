@@ -31,89 +31,6 @@ export const registerStopPointTools = (
   server: McpServer,
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
-  // --- Meta ---
-  server.tool(
-    "stoppoint_meta_modes",
-    "Gets the list of all transport modes available at TfL stop points.",
-    {},
-    {
-      title: "StopPoint Meta Modes",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data =
-            yield* client.request<Array<{ modeName?: string; isTflService?: boolean }>>(
-              "/StopPoint/Meta/Modes",
-            );
-          const modes = data.map((m) => `${m.modeName ?? "?"} (TfL: ${m.isTflService ?? false})`);
-          return `StopPoint modes:\n\n${modes.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "stoppoint_meta_stop_types",
-    "Gets all valid stop point types (e.g. NaptanMetroStation, NaptanPublicBusCoachTram, NaptanRailStation).",
-    {},
-    {
-      title: "StopPoint Meta Stop Types",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<string[]>("/StopPoint/Meta/StopTypes");
-          return `Stop point types:\n\n${data.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "stoppoint_meta_categories",
-    "Gets the list of available additional information categories for stop points.",
-    {},
-    {
-      title: "StopPoint Meta Categories",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{ category?: string; availableKeys?: string[] }>
-          >("/StopPoint/Meta/Categories");
-          const lines = data.map((c) => {
-            const keys = c.availableKeys?.join(", ") ?? "none";
-            return `${c.category ?? "?"}: ${keys}`;
-          });
-          return `StopPoint categories (${data.length}):\n\n${lines.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
   // --- Lookup ---
   server.tool(
     "stoppoint_search",
@@ -216,6 +133,58 @@ export const registerStopPointTools = (
   );
 
   server.tool(
+    "stoppoint_lookup",
+    "Gets stop points by transport mode or by stop type. Valid stop types: NaptanMetroStation, NaptanPublicBusCoachTram, NaptanRailStation, NaptanFerryPort, NaptanAirport. Supports pagination.",
+    {
+      modes: z
+        .string()
+        .optional()
+        .describe("Comma-separated modes (e.g. 'tube', 'dlr', 'overground')"),
+      types: z
+        .string()
+        .optional()
+        .describe(
+          "Comma-separated stop types (e.g. 'NaptanMetroStation'). Use instead of modes to filter by stop type.",
+        ),
+      page: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe("Page number for pagination (default: 1)"),
+    },
+    {
+      title: "StopPoint Lookup",
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
+    async ({ modes, types, page }) => {
+      const result = await runtime.runPromiseExit(
+        Effect.gen(function* () {
+          const client = yield* TflClient;
+          if (types) {
+            const path = page
+              ? `/StopPoint/Type/${encodeURIComponent(types)}/page/${page}`
+              : `/StopPoint/Type/${encodeURIComponent(types)}`;
+            const data = yield* client.request<StopPoint[]>(path);
+            return `Stop points of type "${types}" (${data.length}):\n\n${data.map(formatStop).join("\n")}`;
+          }
+          const raw = yield* client.request<StopPoint | StopPoint[]>(
+            `/StopPoint/Mode/${encodeURIComponent(modes ?? "")}`,
+            { page },
+          );
+          const data = Array.isArray(raw) ? raw : [raw];
+          return `Stop points for mode(s) "${modes}" (page ${page ?? 1}, ${data.length} results):\n\n${data.map(formatStop).join("\n")}`;
+        }),
+      );
+      if (result._tag === "Failure") return formatError(result.cause);
+      return formatSuccess(result.value);
+    },
+  );
+
+  server.tool(
     "stoppoint_by_sms",
     "Gets a stop point by its 5-digit SMS bus stop code (used for TfL's SMS arrival checker service).",
     {
@@ -247,14 +216,14 @@ export const registerStopPointTools = (
 
   server.tool(
     "stoppoint_by_geo",
-    "Gets stop points within a radius of given coordinates, filtered by stop type.",
+    "Gets stop points within a radius of given coordinates, filtered by stop type. Valid stop types: NaptanMetroStation, NaptanPublicBusCoachTram, NaptanRailStation, NaptanFerryPort, NaptanAirport.",
     {
       lat: z.number().describe("Latitude"),
       lon: z.number().describe("Longitude"),
       stopTypes: z
         .string()
         .describe(
-          "Comma-separated stop type(s) (e.g. 'NaptanMetroStation,NaptanPublicBusCoachTram'). Use stoppoint_meta_stop_types for available types.",
+          "Comma-separated stop type(s) (e.g. 'NaptanMetroStation,NaptanPublicBusCoachTram').",
         ),
       radius: z
         .number()
@@ -317,76 +286,6 @@ export const registerStopPointTools = (
   );
 
   server.tool(
-    "stoppoint_by_mode",
-    "Gets all stop points filtered by transport mode. Supports pagination.",
-    {
-      modes: z.string().describe("Comma-separated modes (e.g. 'tube', 'dlr', 'overground')"),
-      page: z
-        .number()
-        .int()
-        .positive()
-        .optional()
-        .describe("Page number for pagination (default: 1)"),
-    },
-    {
-      title: "StopPoints by Mode",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ modes, page }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const raw = yield* client.request<StopPoint | StopPoint[]>(
-            `/StopPoint/Mode/${encodeURIComponent(modes)}`,
-            { page },
-          );
-          const data = Array.isArray(raw) ? raw : [raw];
-          return `Stop points for mode(s) "${modes}" (page ${page ?? 1}, ${data.length} results):\n\n${data.map(formatStop).join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "stoppoint_by_type",
-    "Gets all stop points of a specific type, with optional pagination.",
-    {
-      types: z
-        .string()
-        .describe(
-          "Comma-separated stop types (e.g. 'NaptanMetroStation'). Use stoppoint_meta_stop_types to list valid types.",
-        ),
-      page: z.number().int().optional().describe("Page number for large result sets"),
-    },
-    {
-      title: "StopPoints by Type",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ types, page }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const path = page
-            ? `/StopPoint/Type/${encodeURIComponent(types)}/page/${page}`
-            : `/StopPoint/Type/${encodeURIComponent(types)}`;
-          const data = yield* client.request<StopPoint[]>(path);
-          return `Stop points of type "${types}" (${data.length}):\n\n${data.map(formatStop).join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
     "stoppoint_service_types",
     "Gets the service types (Regular, Night) available at a specific stop point.",
     {
@@ -423,13 +322,28 @@ export const registerStopPointTools = (
   // --- Arrivals ---
   server.tool(
     "stoppoint_arrivals",
-    "Gets live arrival predictions for all lines at a given stop point. The most useful real-time departure board tool.",
+    "Gets live arrival predictions (and optionally departures) at a given stop point. Pass includeDepartures=true for Overground and Elizabeth line departure boards.",
     {
       id: z
         .string()
         .describe(
           "Stop point Naptan ID (e.g. '940GZZLUVIC' for Victoria tube). Use stoppoint_search to find IDs.",
         ),
+      includeDepartures: z
+        .boolean()
+        .optional()
+        .describe("If true, return arrival/departure data (Overground and Elizabeth line only)"),
+      lineIds: z
+        .string()
+        .optional()
+        .describe(
+          "Comma-separated line IDs to filter (used with includeDepartures, e.g. 'london-overground,elizabeth')",
+        ),
+      numberOfArrivals: z
+        .number()
+        .int()
+        .optional()
+        .describe("Maximum number of arrivals to return"),
     },
     {
       title: "StopPoint Arrivals",
@@ -438,65 +352,40 @@ export const registerStopPointTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ id }) => {
+    async ({ id, includeDepartures, lineIds, numberOfArrivals }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
+          if (includeDepartures) {
+            const data = yield* client.request<
+              Array<{
+                stationName?: string;
+                lineName?: string;
+                platformName?: string;
+                destinationName?: string;
+                scheduledTimeOfArrival?: string;
+                scheduledTimeOfDeparture?: string;
+                estimatedTimeOfArrival?: string;
+                estimatedTimeOfDeparture?: string;
+              }>
+            >(`/StopPoint/${encodeURIComponent(id)}/ArrivalDepartures`, { lineIds });
+            if (!data.length) return `No arrivals/departures at stop ${id}.`;
+            const lines = data.map((d) => {
+              const dest = d.destinationName ?? "?";
+              const platform = d.platformName ? ` (${d.platformName})` : "";
+              const arr = d.estimatedTimeOfArrival ?? d.scheduledTimeOfArrival ?? "?";
+              const dep = d.estimatedTimeOfDeparture ?? d.scheduledTimeOfDeparture ?? "?";
+              return `  ${d.lineName ?? "?"} → ${dest}${platform} — arr: ${arr} dep: ${dep}`;
+            });
+            return `Arrival/Departures at ${data[0]?.stationName ?? id}:\n${lines.join("\n")}`;
+          }
           const data = yield* client.request<ArrivalPrediction[]>(
             `/StopPoint/${encodeURIComponent(id)}/Arrivals`,
           );
           if (!data.length) return `No arrivals currently predicted at stop ${id}.`;
           const sorted = [...data].sort((a, b) => (a.timeToStation ?? 0) - (b.timeToStation ?? 0));
-          return `Arrivals at ${data[0]?.stationName ?? id}:\n${sorted.map(formatArrival).join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "stoppoint_arrival_departures",
-    "Gets live arrival AND departure predictions for a stop point (Overground and Elizabeth line only).",
-    {
-      id: z.string().describe("Stop point Naptan ID"),
-      lineIds: z
-        .string()
-        .optional()
-        .describe("Comma-separated line IDs to filter (e.g. 'london-overground,elizabeth')"),
-    },
-    {
-      title: "StopPoint Arrival/Departures",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-    async ({ id, lineIds }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{
-              stationName?: string;
-              lineName?: string;
-              platformName?: string;
-              destinationName?: string;
-              scheduledTimeOfArrival?: string;
-              scheduledTimeOfDeparture?: string;
-              estimatedTimeOfArrival?: string;
-              estimatedTimeOfDeparture?: string;
-            }>
-          >(`/StopPoint/${encodeURIComponent(id)}/ArrivalDepartures`, { lineIds });
-          if (!data.length) return `No arrivals/departures at stop ${id}.`;
-          const lines = data.map((d) => {
-            const dest = d.destinationName ?? "?";
-            const platform = d.platformName ? ` (${d.platformName})` : "";
-            const arr = d.estimatedTimeOfArrival ?? d.scheduledTimeOfArrival ?? "?";
-            const dep = d.estimatedTimeOfDeparture ?? d.scheduledTimeOfDeparture ?? "?";
-            return `  ${d.lineName ?? "?"} → ${dest}${platform} — arr: ${arr} dep: ${dep}`;
-          });
-          return `Arrival/Departures at ${data[0]?.stationName ?? id}:\n${lines.join("\n")}`;
+          const limited = numberOfArrivals ? sorted.slice(0, numberOfArrivals) : sorted;
+          return `Arrivals at ${data[0]?.stationName ?? id}:\n${limited.map(formatArrival).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -507,18 +396,27 @@ export const registerStopPointTools = (
   // --- Disruptions ---
   server.tool(
     "stoppoint_disruptions",
-    "Gets all active disruptions at one or more stop points.",
+    "Gets active disruptions at specific stop points or all disrupted stops for a given mode.",
     {
-      ids: z.string().describe("Comma-separated stop point Naptan IDs"),
-      getFamily: z.boolean().optional().describe("If true, include disruptions for child stops"),
+      ids: z.string().optional().describe("Comma-separated stop point Naptan IDs"),
+      modes: z
+        .string()
+        .optional()
+        .describe(
+          "Comma-separated modes (e.g. 'tube,dlr'). Use instead of ids to get all disrupted stops for a mode.",
+        ),
       includeRouteBlockedStops: z
         .boolean()
         .optional()
         .describe("If true, include stops where the route is blocked"),
+      getFamily: z
+        .boolean()
+        .optional()
+        .describe("If true, include disruptions for child stops (used with ids)"),
       flattenResponse: z
         .boolean()
         .optional()
-        .describe("If true, return a flat list rather than nested structure"),
+        .describe("If true, return a flat list rather than nested structure (used with ids)"),
     },
     {
       title: "StopPoint Disruptions",
@@ -527,10 +425,18 @@ export const registerStopPointTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ ids, getFamily, includeRouteBlockedStops, flattenResponse }) => {
+    async ({ ids, modes, includeRouteBlockedStops, getFamily, flattenResponse }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
+          if (modes) {
+            const data = yield* client.request<StopPoint[]>(
+              `/StopPoint/Mode/${encodeURIComponent(modes)}/Disruption`,
+              { includeRouteBlockedStops },
+            );
+            if (!data.length) return `No disrupted stops for mode(s): ${modes}`;
+            return `Disrupted stops for ${modes} (${data.length}):\n\n${data.map(formatStop).join("\n")}`;
+          }
           const data = yield* client.request<
             Array<{
               category?: string;
@@ -542,7 +448,7 @@ export const registerStopPointTools = (
               affectedRoutes?: Array<{ name?: string }>;
               affectedStops?: Array<{ commonName?: string }>;
             }>
-          >(`/StopPoint/${encodeURIComponent(ids)}/Disruption`, {
+          >(`/StopPoint/${encodeURIComponent(ids ?? "")}/Disruption`, {
             getFamily,
             includeRouteBlockedStops,
             flattenResponse,
@@ -562,42 +468,6 @@ export const registerStopPointTools = (
             return parts.join("\n");
           });
           return `Disruptions at ${ids} (${data.length}):\n\n${lines.join("\n---\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "stoppoint_disruptions_by_mode",
-    "Gets all disrupted stop points for a given transport mode.",
-    {
-      modes: z.string().describe("Comma-separated modes (e.g. 'tube,dlr')"),
-      includeRouteBlockedStops: z
-        .boolean()
-        .optional()
-        .describe("If true, include route-blocked stops"),
-    },
-    {
-      title: "StopPoint Disruptions by Mode",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: false,
-      openWorldHint: true,
-    },
-    async ({ modes, includeRouteBlockedStops }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<StopPoint[]>(
-            `/StopPoint/Mode/${encodeURIComponent(modes)}/Disruption`,
-            {
-              includeRouteBlockedStops,
-            },
-          );
-          if (!data.length) return `No disrupted stops for mode(s): ${modes}`;
-          return `Disrupted stops for ${modes} (${data.length}):\n\n${data.map(formatStop).join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
@@ -767,107 +637,76 @@ export const registerStopPointTools = (
 
   // --- Associated places ---
   server.tool(
-    "stoppoint_car_parks",
-    "Gets car parks associated with a given stop point (station).",
-    {
-      stopPointId: z.string().describe("Stop point Naptan ID"),
-    },
-    {
-      title: "StopPoint Car Parks",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ stopPointId }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{
-              id?: string;
-              name?: string;
-              carParkId?: string;
-              accessPoints?: Array<{ name?: string }>;
-              facilities?: Array<{ name?: string; description?: string; paymentMethods?: string }>;
-            }>
-          >(`/StopPoint/${encodeURIComponent(stopPointId)}/CarParks`);
-          if (!data.length) return `No car parks found near stop ${stopPointId}.`;
-          const lines = data.map((cp) => {
-            const id = cp.carParkId ?? cp.id ?? "?";
-            const name = cp.name ?? id;
-            const spaces =
-              cp.facilities?.map((f) => `${f.name ?? "?"}: ${f.description ?? "?"}`).join(", ") ??
-              "details unavailable";
-            return `${name} (${id}) — ${spaces}`;
-          });
-          return `Car parks near stop ${stopPointId} (${data.length}):\n\n${lines.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "stoppoint_taxi_ranks",
-    "Gets taxi ranks near a given stop point (station).",
-    {
-      stopPointId: z.string().describe("Stop point Naptan ID"),
-    },
-    {
-      title: "StopPoint Taxi Ranks",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async ({ stopPointId }) => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<
-            Array<{
-              id?: string;
-              commonName?: string;
-              placeType?: string;
-              lat?: number;
-              lon?: number;
-            }>
-          >(`/StopPoint/${encodeURIComponent(stopPointId)}/TaxiRanks`);
-          if (!data.length) return `No taxi ranks found near stop ${stopPointId}.`;
-          const lines = data.map(
-            (t) =>
-              `${t.commonName ?? t.id ?? "?"} (${t.placeType ?? "TaxiRank"}) — ${t.lat != null ? `${t.lat}, ${t.lon}` : "no coords"}`,
-          );
-          return `Taxi ranks near stop ${stopPointId} (${data.length}):\n\n${lines.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
-    "stoppoint_place_types",
-    "Gets places of given types that are associated with (near) a specific stop point.",
+    "stoppoint_places",
+    "Gets places associated with a stop point: car parks, taxi ranks, or other place types. Default returns all place types.",
     {
       id: z.string().describe("Stop point Naptan ID"),
+      type: z
+        .enum(["CarParks", "TaxiRanks", "placeTypes"])
+        .optional()
+        .describe(
+          "Type of associated places: 'CarParks', 'TaxiRanks', or 'placeTypes' (default). Default returns place types.",
+        ),
       placeTypes: z
         .string()
-        .describe("Comma-separated place types to look up (e.g. 'AirportTerminal,CarPark')"),
+        .optional()
+        .describe(
+          "Comma-separated place types to look up (e.g. 'AirportTerminal,CarPark'). Used when type is 'placeTypes'.",
+        ),
     },
     {
-      title: "StopPoint Place Types",
+      title: "StopPoint Places",
       readOnlyHint: true,
       destructiveHint: false,
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ id, placeTypes }) => {
+    async ({ id, type, placeTypes }) => {
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* TflClient;
+          if (type === "CarParks") {
+            const data = yield* client.request<
+              Array<{
+                id?: string;
+                name?: string;
+                carParkId?: string;
+                accessPoints?: Array<{ name?: string }>;
+                facilities?: Array<{
+                  name?: string;
+                  description?: string;
+                  paymentMethods?: string;
+                }>;
+              }>
+            >(`/StopPoint/${encodeURIComponent(id)}/CarParks`);
+            if (!data.length) return `No car parks found near stop ${id}.`;
+            const lines = data.map((cp) => {
+              const cpId = cp.carParkId ?? cp.id ?? "?";
+              const name = cp.name ?? cpId;
+              const spaces =
+                cp.facilities?.map((f) => `${f.name ?? "?"}: ${f.description ?? "?"}`).join(", ") ??
+                "details unavailable";
+              return `${name} (${cpId}) — ${spaces}`;
+            });
+            return `Car parks near stop ${id} (${data.length}):\n\n${lines.join("\n")}`;
+          }
+          if (type === "TaxiRanks") {
+            const data = yield* client.request<
+              Array<{
+                id?: string;
+                commonName?: string;
+                placeType?: string;
+                lat?: number;
+                lon?: number;
+              }>
+            >(`/StopPoint/${encodeURIComponent(id)}/TaxiRanks`);
+            if (!data.length) return `No taxi ranks found near stop ${id}.`;
+            const lines = data.map(
+              (t) =>
+                `${t.commonName ?? t.id ?? "?"} (${t.placeType ?? "TaxiRank"}) — ${t.lat != null ? `${t.lat}, ${t.lon}` : "no coords"}`,
+            );
+            return `Taxi ranks near stop ${id} (${data.length}):\n\n${lines.join("\n")}`;
+          }
           const data = yield* client.request<
             Array<{
               id?: string;
@@ -877,12 +716,13 @@ export const registerStopPointTools = (
               lon?: number;
             }>
           >(`/StopPoint/${encodeURIComponent(id)}/placeTypes`, { placeTypes });
-          if (!data.length) return `No places of type "${placeTypes}" found at stop ${id}.`;
+          if (!data.length)
+            return `No places${placeTypes ? ` of type "${placeTypes}"` : ""} found at stop ${id}.`;
           const lines = data.map(
             (p) =>
               `${p.commonName ?? p.id ?? "?"} (${p.placeType ?? "?"}) — ${p.lat != null ? `${p.lat}, ${p.lon}` : "no coords"}`,
           );
-          return `Places of type "${placeTypes}" at stop ${id} (${data.length}):\n\n${lines.join("\n")}`;
+          return `Places${placeTypes ? ` of type "${placeTypes}"` : ""} at stop ${id} (${data.length}):\n\n${lines.join("\n")}`;
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);

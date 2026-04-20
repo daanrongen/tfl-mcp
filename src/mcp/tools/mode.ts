@@ -11,35 +11,8 @@ export const registerModeTools = (
   runtime: ManagedRuntime.ManagedRuntime<TflClient, TflError | TflDisambiguationError>,
 ) => {
   server.tool(
-    "mode_active_service_types",
-    "Returns the active service types for each transport mode (e.g. whether Night Tube is currently running).",
-    {},
-    {
-      title: "Active Service Types",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<Array<{ mode?: string; serviceType?: string }>>(
-            "/Mode/ActiveServiceTypes",
-          );
-          const rows = data.map((s) => `${s.mode ?? "?"}: ${s.serviceType ?? "?"}`);
-          return `Active service types:\n\n${rows.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
     "mode_arrivals",
-    "Gets the next arrival predictions for all stops of a given transport mode.",
+    "Gets the next arrival predictions for all stops of a given transport mode. Valid modes: tube, bus, dlr, overground, elizabeth-line, tram, cable-car.",
     {
       mode: z
         .string()

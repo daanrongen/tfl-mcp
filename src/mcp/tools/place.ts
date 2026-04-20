@@ -22,7 +22,7 @@ export const registerPlaceTools = (
 ) => {
   server.tool(
     "place_search",
-    "Search for TfL places (stations, stops, landmarks) by name.",
+    "Search for TfL places (stations, stops, landmarks) by name. Valid place types include: StopPoint, NaptanMetroStation, NaptanRailStation, CarPark, Airport, BikePoint, and others.",
     {
       name: z
         .string()
@@ -32,7 +32,7 @@ export const registerPlaceTools = (
         .string()
         .optional()
         .describe(
-          "Comma-separated place types to filter by. Use place_meta_types to get available types.",
+          "Comma-separated place types to filter by (e.g. 'StopPoint,NaptanMetroStation').",
         ),
     },
     {
@@ -132,38 +132,10 @@ export const registerPlaceTools = (
   );
 
   server.tool(
-    "place_meta_types",
-    "Gets the list of valid TfL place types.",
-    {},
-    {
-      title: "Place Meta Types",
-      readOnlyHint: true,
-      destructiveHint: false,
-      idempotentHint: true,
-      openWorldHint: true,
-    },
-    async () => {
-      const result = await runtime.runPromiseExit(
-        Effect.gen(function* () {
-          const client = yield* TflClient;
-          const data = yield* client.request<string[]>("/Place/Meta/PlaceTypes");
-          return `Place types:\n\n${data.join("\n")}`;
-        }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
-  );
-
-  server.tool(
     "place_by_type",
-    "Gets all places of a given type.",
+    "Gets all places of a given type. Valid types: StopPoint, NaptanMetroStation, NaptanRailStation, CarPark, Airport, BikePoint, and others.",
     {
-      types: z
-        .string()
-        .describe(
-          "Comma-separated place types (e.g. 'CarPark,Airport'). Use place_meta_types to list valid types.",
-        ),
+      types: z.string().describe("Comma-separated place types (e.g. 'CarPark,Airport')."),
     },
     {
       title: "Places by Type",
